@@ -1,0 +1,16 @@
+Package: networkSoSD
+Title: Network Sum-of-Squares and Debias
+Version: 1.0.0.0000
+Authors@R: person("First", "Last", email = "first.last@example.com", role = c("aut", "cre"))
+Description: This package contains the method to perform network aggregation by
+summing the squared adjacency matrices and perform an appropriate debiasing.
+Depends:
+    R (>= 3.3.0)
+License: MIT +file LICENSE
+Encoding: UTF-8
+LazyData: true
+Imports:
+    MASS
+Suggests:
+    testthat
+RoxygenNote: 6.1.1
