@@ -9,6 +9,7 @@ source_code_info <- readLines("../simulation/simulation_rho.R")
 paramMat <- cbind(500, 100, seq(0.1, 0.15, length.out = 11), 0.45, 0.1, 0.45)
 colnames(paramMat) <- c("n", "L", "rho", "mem_prop1", "mem_prop2", "mem_prop3")
 
+.l2norm <- function(x){sqrt(sum(x^2))}
 vec1 <- c(1,1,sqrt(2))
 vec2 <- c(1,1,-sqrt(2))
 vec3 <- c(-1,1,0)
@@ -67,3 +68,14 @@ criterion <- function(dat, vec, y){
 }
 
 ## i <- 6; y <- 1; set.seed(y); zz1 <- criterion(rule(paramMat[i,]), paramMat[i,], y); zz1
+
+#########################
+
+
+res <- simulation::simulation_generator(rule = rule, criterion = criterion,
+                                        paramMat = paramMat, trials = trials,
+                                        cores = ncores, as_list = T,
+                                        filepath = "../results/simulation_rho_tmp.RData",
+                                        verbose = T)
+
+save.image("../results/simulation_rho.RData")
