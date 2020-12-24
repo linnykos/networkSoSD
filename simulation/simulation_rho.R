@@ -32,35 +32,35 @@ rule <- function(vec){
   membership_vec <- c(rep(1, mem_prop1*n), rep(2, mem_prop2*n), rep(3, mem_prop3*n))
   if(length(membership_vec) < n) membership_vec <- c(membership_vec, rep(3, n-length(membership_vec)))
   
-  prob_mat1 <- compute_prob_mat(rho*B1, membership_vec)
-  prob_mat2 <- compute_prob_mat(rho*B2, membership_vec)
+  prob_mat1 <- networkSoSD::compute_prob_mat(rho*B1, membership_vec)
+  prob_mat2 <- networkSoSD::compute_prob_mat(rho*B2, membership_vec)
   prob_list <- lapply(1:L, function(i){if(i <= L/2) prob_mat1 else prob_mat2})
   
-  adj_list <- lapply(1:L, function(i){generate_adjaceny_mat(prob_list[[i]])})
+  adj_list <- lapply(1:L, function(i){networkSoSD::generate_adjaceny_mat(prob_list[[i]])})
   
   list(adj_list = adj_list)
 }
 
 criterion <- function(dat, vec, y){
-  agg_network <- aggregate_networks(dat$adj_list, method = "ss_debias")
-  res1 <- spectral_clustering(agg_network, K = K, weighted = F)
+  agg_network <- networkSoSD::aggregate_networks(dat$adj_list, method = "ss_debias")
+  res1 <- networkSoSD::spectral_clustering(agg_network, K = K, weighted = F)
   
   # try naive method of adding
-  agg_network <- aggregate_networks(dat$adj_list, method = "sum")
-  res2 <- spectral_clustering(agg_network, K = K, weighted = F)
+  agg_network <- networkSoSD::aggregate_networks(dat$adj_list, method = "sum")
+  res2 <- networkSoSD::spectral_clustering(agg_network, K = K, weighted = F)
   
   # try naive method of ss
-  agg_network <- aggregate_networks(dat$adj_list, method = "ss")
-  res3 <- spectral_clustering(agg_network, K = K, weighted = F)
+  agg_network <- networkSoSD::aggregate_networks(dat$adj_list, method = "ss")
+  res3 <- networkSoSD::spectral_clustering(agg_network, K = K, weighted = F)
   
   ### now all the weighted versions
   # try naive method of adding
-  agg_network <- aggregate_networks(dat$adj_list, method = "sum")
-  res4 <- spectral_clustering(agg_network, K = K, weighted = T)
+  agg_network <- networkSoSD::aggregate_networks(dat$adj_list, method = "sum")
+  res4 <- networkSoSD::spectral_clustering(agg_network, K = K, weighted = T)
   
   # try naive method of ss
-  agg_network <- aggregate_networks(dat$adj_list, method = "ss")
-  res5 <- spectral_clustering(agg_network, K = K, weighted = T)
+  agg_network <- networkSoSD::aggregate_networks(dat$adj_list, method = "ss")
+  res5 <- networkSoSD::spectral_clustering(agg_network, K = K, weighted = T)
   
   list(res_ss_debias_F = res1, 
        res_sum_F = res2, res_ss_F = res3, 

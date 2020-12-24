@@ -1,9 +1,9 @@
 rm(list=ls())
 set.seed(10)
-load("../../pnas.RData")
+load("../../pnas/pnas.RData")
 
 # manage gene names
-gene_name <- read.csv("../../All_human_genes.txt", header = F)
+gene_name <- read.csv("../../pnas/All_human_genes.txt", header = F)
 
 library(org.Mmu.eg.db)
 rhesus_all <- as.list(org.Mmu.eg.db::org.Mmu.egALIAS2EG)
@@ -43,10 +43,15 @@ degree_list <- lapply(adj_list, function(adj_mat){
 # length(idx_vec)
 
 degree_mat <- do.call(rbind, degree_list)
-degree_vec <- apply(degree_mat, 2, function(x){stats::quantile(x, probs = 0.25)})
-table(degree_vec)
+degree_vec <- colSums(degree_mat)
+zero_vec <- apply(degree_mat, 2, function(x){length(which(x == 0))})
+quantile(degree_vec, probs = seq(0,1,length.out=11))
+table(zero_vec)
+# quantile(zero_vec[which(degree_vec <= 50)])
+idx <- which(zero_vec >= 5)
+quantile(degree_vec[idx], probs = seq(0,1,length.out=11))
 
-keep_idx2 <- which(degree_vec > 1)
+keep_idx2 <- which(degree_vec >= 90)
 length(keep_idx2)
 length(keep_idx2)/nrow(adj_list[[1]])
 
@@ -56,24 +61,45 @@ adj_list <- lapply(adj_list, function(adj_mat){
 entrez_id2 <- entrez_id[keep_idx2]
 gene_name2 <- gene_name[keep_idx2]
 
+# check power law distribution
+power_law <- sapply(adj_list, function(adj_mat){
+  deg_vec <- colSums(adj_mat)
+  
+  x <- table(deg_vec)+1
+  y <- as.numeric(names(x))+1
+  x <- as.numeric(x)
+  
+  stats::cor(log(x),log(y))^2
+})
+quantile(power_law)
+
 lapply(adj_list, function(x){quantile(colSums(x))})
 
-total_network <- aggregate_networks(adj_list, verbose = T)
+total_network <- networkSoSD::aggregate_networks(adj_list, method = "ss_debias", verbose = T)
 svd_res <- RSpectra::svds(total_network, k = 30)
 abs(diff(svd_res$d))/svd_res$d[2:length(svd_res$d)]
 
 set.seed(10)
-K <- 10
-clustering_res <- spectral_clustering(total_network, K = K, weighted = F)
-table(clustering_res)
+K <- 8
+clustering_res <- networkSoSD::spectral_clustering(total_network, K = K, weighted = F)
 
+########################
+
+# manually change the labeling of the clusters
+desired_order <- c(6,1,4,3,8,7,5,2)
+clustering_res2 <- rep(NA, length(clustering_res))
+for(i in 1:length(desired_order)){
+  clustering_res2[which(clustering_res == desired_order[i])] <- i
+}
+table(clustering_res2)
+table(clustering_res2)/nrow(adj_list[[1]])
 
 ########################
 
 ego_list <- vector("list", length = K)
 for(i in 1:K){
   set.seed(10)
-  ego_list[[i]] <- clusterProfiler::enrichGO(gene         = entrez_id2[which(clustering_res == i)],
+  ego_list[[i]] <- clusterProfiler::enrichGO(gene         = entrez_id2[which(clustering_res2 == i)],
                                              universe      = entrez_id,
                                              OrgDb         = org.Mmu.eg.db,
                                              ont           = "ALL",
@@ -87,12 +113,13 @@ ego_summary <- vector("list", length = K)
 for(i in 1:K){
   tmp <- ego_list[[i]]@result
   if(length(tmp) > 0){
-    tmp <- tmp[,c("Count", "Description")]
+    tmp <- tmp[,c("Count", "Description", "pvalue")]
     ego_summary[[i]] <- tmp
   } else {
     ego_summary[[i]] <- NA
   }
 }
+ego_summary
 
 # ggo_list <- vector("list", length = K)
 # for(i in 1:K){
@@ -110,12 +137,12 @@ for(i in 1:K){
 
 ##########################################
 
-png(paste0("../figures/Writeup2_pnas_svd.png"), height = 1500, width = 2500, units = "px", res = 300)
+png(paste0("../figures/Writeup3_pnas_svd.png"), height = 1500, width = 2500, units = "px", res = 300)
 par(mfrow = c(1,2))
 plot(svd_res$d, pch = 16, xlab = "Index", ylab = "Eigenvalue magnitude")
-lines(rep(10.5,2), c(-1e2,1e9), col = "red", lwd = 2, lty = 2)
-plot(log(svd_res$d), pch = 16, xlab = "Index", ylab = "Log of eigenvalue magnitude")
-lines(rep(10.5,2), c(-1e2,1e9), col = "red", lwd = 2, lty = 2)
+lines(rep(8.5,2), c(-1e2,1e9), col = "red", lwd = 2, lty = 2)
+plot(log(svd_res$d), ylim = c(min(log(svd_res$d)), 13.1), pch = 16, xlab = "Index", ylab = "Log of eigenvalue magnitude")
+lines(rep(8.5,2), c(-1e2,1e9), col = "red", lwd = 2, lty = 2)
 graphics.off()
 
 file_vec <- list.files("/raid6/Fuchen/monkey_data/PretimeA/")
@@ -125,15 +152,15 @@ time_stamp <- as.vector(sapply(file_vec, function(x){
   strsplit(tmp, split = "\\.")[[1]][1]
 }))
 
-gene_idx <- unlist(lapply(1:K, function(x){which(clustering_res == x)}))
+gene_idx <- unlist(lapply(1:K, function(x){which(clustering_res2 == x)}))
 clockwise90 <- function(a) { t(a[nrow(a):1,]) } 
 for(i in 1:length(dat_list)){
   print(i)
-  png(paste0("../figures/Writeup2_pnas_adj", i, ".png"), height = 3000, width = 3000, units = "px", res = 300)
+  png(paste0("../figures/Writeup3_pnas_adj", i, ".png"), height = 3000, width = 3000, units = "px", res = 300)
   image(clockwise90(adj_list[[i]][gene_idx, gene_idx]), main = time_stamp[i])
   
   for(j in 1:(K-1)){
-    len <- length(which(clustering_res <= j))/length(clustering_res)
+    len <- length(which(clustering_res2 <= j))/length(clustering_res2)
     lines(c(-1e4,1e4), rep(1-len,2), lwd = 2, lty = 2)
     lines(rep(len,2), c(-1e4,1e4), lwd = 2, lty = 2)
   }

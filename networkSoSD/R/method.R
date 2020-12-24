@@ -54,7 +54,7 @@ spectral_clustering <- function(sym_mat, K, weighted = F){
 #' @param K positive integer less than \code{n}
 #' @param weighted boolean
 #'
-#' @return a list or numeric matrix, depending on \code{factors}
+#' @return numeric matrix
 .svd_projection <- function(adj_mat, K, weighted = F){
   stopifnot(nrow(adj_mat) >= K, nrow(adj_mat) == ncol(adj_mat))
   
