@@ -17,9 +17,9 @@ aggregate_networks <- function(adj_list, method = "ss_debias",
     if(method == "sum"){
       tmp[,,i] <- adj_list[[i]]
     } else if(method == "ss"){
-      tmp[,,i] <- tcrossprod(adj_list[[i]])
+      tmp[,,i] <- crossprod(adj_list[[i]])
     } else if(method == "ss_debias"){
-      tmp[,,i] <- tcrossprod(adj_list[[i]]) - diag(apply(adj_list[[i]], 1, sum))
+      tmp[,,i] <- crossprod(adj_list[[i]]) - diag(colSums(adj_list[[i]]))
     } else {
       stop("method not found")
     }
