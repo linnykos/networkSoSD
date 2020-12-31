@@ -3,4 +3,5 @@
 export(aggregate_networks)
 export(compute_prob_mat)
 export(generate_adjaceny_mat)
+export(greedy_clustering)
 export(spectral_clustering)

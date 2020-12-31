@@ -1,6 +1,16 @@
 # from https://www.dropbox.com/s/o4vbqzd98i41gbp/code.zip?dl=0
 # For Lei, Chen, Lynch 2019 Consistent community detection in multi-layer network data.
 
+#' Greedy clustering
+#'
+#' @param adj_list list of adjacency matrices
+#' @param K positive integer
+#' @param nstart positive integer
+#' @param iter_max positive integer
+#' @param verbose boolean
+#'
+#' @return membership vector
+#' @export
 greedy_clustering <- function(adj_list, K, nstart = 10, iter_max = 100, verbose = F){
   stopifnot(length(adj_list) > 1)
   stopifnot(length(unique(as.numeric(sapply(adj_list, dim)))) == 1)

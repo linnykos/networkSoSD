@@ -67,7 +67,7 @@ criterion <- function(dat, vec, y){
   res3b <- networkSoSD::spectral_clustering(agg_network, K = K, weighted = T)
   
   ### now the greedy method
-  res4 <- greedy_clustering(dat$adj_list, K = K)$cluster
+  res4 <- networkSoSD::greedy_clustering(dat$adj_list, K = K)$cluster
   
   list(res_ss_debias_F = res1, res_ss_debias_T = res1b, 
        res_sum_F = res2, res_ss_F = res3, 
@@ -75,7 +75,7 @@ criterion <- function(dat, vec, y){
        res_greedy = res4)
 }
 
-## i <- 6; y <- 1; set.seed(y); zz1 <- criterion(rule(paramMat[i,]), paramMat[i,], y); zz1
+## i <- 1; y <- 1; set.seed(y); zz <- criterion(rule(paramMat[i,]), paramMat[i,], y); zz
 
 #########################
 
