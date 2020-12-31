@@ -7,7 +7,7 @@ date_of_run <- Sys.time()
 source_code_info <- readLines("../simulation/simulation_rho.R")
 run_suffix <- "_writeup4"
 
-paramMat <- cbind(500, 100, seq(0.1, 0.2, length.out = 21), 0.4, 0.1, 0.5)
+paramMat <- cbind(500, 100, seq(0.025, 0.2, length.out = 15), 0.4, 0.1, 0.5)
 colnames(paramMat) <- c("n", "L", "rho", "mem_prop1", "mem_prop2", "mem_prop3")
 
 .l2norm <- function(x){sqrt(sum(x^2))}
