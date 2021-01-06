@@ -68,7 +68,7 @@ flatten <- function(adj_list){
 #' sometimes there are numerical instability issues. In case of crashes, the code
 #' then uses the default \code{svd} function.
 #'
-#' @param adj_mat numeric matrix with \code{n} rows and \code{n} columns
+#' @param mat numeric matrix with \code{n} rows and \code{n} columns
 #' @param K positive integer less than \code{n}
 #' @param weighted boolean
 #'
@@ -88,7 +88,7 @@ flatten <- function(adj_list){
   }
   
   if(weighted){
-    .mult_mat_vec(res$u[,1:K, drop = F] %*% sqrt(abs(res$d[1:K])))
+    .mult_mat_vec(res$u[,1:K, drop = F], sqrt(abs(res$d[1:K])))
   } else {
     res$u[,1:K,drop = F]
   }
