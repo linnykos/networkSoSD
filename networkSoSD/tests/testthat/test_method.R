@@ -68,3 +68,33 @@ test_that("spectral_clustering works", {
   expect_true(all(res %% 1 == 0))
   expect_true(all(1:max(res) %in% res))
 })
+
+
+test_that("spectral_clustering works with flattened matricces", {
+  set.seed(10)
+  adj_list <- generate_dataset()
+  n <- nrow(adj_list[[1]]); L <- length(adj_list)
+  flat_mat <- flatten(adj_list)
+  res <- spectral_clustering(flat_mat, K = 3, weighted = F)
+  
+  expect_true(length(res) == nrow(adj_list[[1]]))
+  expect_true(all(res > 0))
+  expect_true(all(res %% 1 == 0))
+  expect_true(all(1:max(res) %in% res))
+})
+
+
+#######################################
+
+## flatten is correct
+
+test_that("spectral_clustering works", {
+  set.seed(10)
+  adj_list <- generate_dataset()
+  n <- nrow(adj_list[[1]]); L <- length(adj_list)
+  res <- flatten(adj_list)
+  
+  expect_true(is.matrix(res))
+  expect_true(all(dim(res) == c(n, n*L)))
+  expect_true(sum(is.na(res)) == 0)
+})

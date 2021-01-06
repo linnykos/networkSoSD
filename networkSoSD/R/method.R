@@ -30,16 +30,34 @@ aggregate_networks <- function(adj_list, method = "ss_debias",
 
 #' Spectral clustering
 #'
-#' @param sym_mat symmetric matrix
+#' @param mat matrix
 #' @param K positive integer
 #' @param weighted boolean
 #'
 #' @return membership vector
 #' @export
-spectral_clustering <- function(sym_mat, K, weighted = F){
-  svd_mat <- .svd_projection(sym_mat, K = K, weighted = weighted)
+spectral_clustering <- function(mat, K, weighted = F){
+  svd_mat <- .svd_projection(mat, K = K, weighted = weighted)
   
   stats::kmeans(svd_mat, centers = K, nstart = 20)$cluster
+}
+
+#' Flatten collection of adjacency matrices
+#'
+#' @param adj_list list of adjacency matrices
+#'
+#' @return a matrix
+#' @export
+flatten <- function(adj_list){
+  stopifnot(length(unique(as.numeric(sapply(adj_list, dim)))) == 1)
+  n <- nrow(adj_list[[1]]); L <- length(adj_list)
+  
+  mat <- matrix(NA, nrow = n, ncol = n*L)
+  for(l in 1:L){
+    mat[,((l-1)*n+1):(l*n)] <- adj_list[[l]]
+  }
+  
+  mat
 }
 
 ##################
@@ -55,33 +73,23 @@ spectral_clustering <- function(sym_mat, K, weighted = F){
 #' @param weighted boolean
 #'
 #' @return numeric matrix
-.svd_projection <- function(adj_mat, K, weighted = F){
-  stopifnot(nrow(adj_mat) >= K, nrow(adj_mat) == ncol(adj_mat))
+.svd_projection <- function(mat, K, weighted = F){
+  stopifnot(nrow(mat) >= K, ncol(mat) >= nrow(mat))
   
-  if(nrow(adj_mat) > K+2){
+  if(min(dim(mat)) > K+2){
     res <- tryCatch({
       # ask for more singular values than needed to ensure stability
-      RSpectra::svds(adj_mat, k = K + 2)
+      RSpectra::svds(mat, k = K + 2)
     }, error = function(e){
-      svd(adj_mat)
+      svd(mat)
     })
   } else {
-    res <- svd(adj_mat)
+    res <- svd(mat)
   }
   
   if(weighted){
-    diag_mat <- .diag_matrix(sqrt(res$d[1:K]))
-    res$u[,1:K, drop = F] %*% diag_mat
+    .mult_mat_vec(res$u[,1:K, drop = F] %*% sqrt(abs(res$d[1:K])))
   } else {
     res$u[,1:K,drop = F]
-  }
-}
-
-.diag_matrix <- function(vec){
-  K <- length(vec)
-  if(K == 1) {
-    matrix(vec, 1, 1)
-  } else {
-    diag(vec)
   }
 }

@@ -57,6 +57,10 @@ criterion <- function(dat, vec, y){
   agg_network <- networkSoSD::aggregate_networks(dat$adj_list, method = "ss")
   res3 <- networkSoSD::spectral_clustering(agg_network, K = K, weighted = F)
   
+  # try naive method of flattening
+  flat_mat <- networkSoSD::flatten(adj_list)
+  res4 <- networkSoSD::spectral_clustering(flat_mat, K = K, weighted = F)
+  
   ### now all the weighted versions
   # try naive method of adding
   agg_network <- networkSoSD::aggregate_networks(dat$adj_list, method = "sum")
@@ -66,13 +70,18 @@ criterion <- function(dat, vec, y){
   agg_network <- networkSoSD::aggregate_networks(dat$adj_list, method = "ss")
   res3b <- networkSoSD::spectral_clustering(agg_network, K = K, weighted = T)
   
+  # try naive method of flattening
+  flat_mat <- networkSoSD::flatten(adj_list)
+  res4b <- networkSoSD::spectral_clustering(flat_mat, K = K, weighted = T)
+  
   ### now the greedy method
-  res4 <- networkSoSD::greedy_clustering(dat$adj_list, K = K)$cluster
+  res5 <- networkSoSD::greedy_clustering(dat$adj_list, K = K)$cluster
   
   list(res_ss_debias_F = res1, res_ss_debias_T = res1b, 
-       res_sum_F = res2, res_ss_F = res3, 
-       res_sum_T = res2b, res_ss_T = res3b,
-       res_greedy = res4)
+       res_sum_F = res2, res_sum_T = res2b, 
+       res_ss_F = res3, res_ss_T = res3b,
+       res_flat_F = res4, res_flat_T = res4b,
+       res_greedy = res5)
 }
 
 ## i <- 1; y <- 1; set.seed(y); zz <- criterion(rule(paramMat[i,]), paramMat[i,], y); zz

@@ -4,10 +4,10 @@
 \alias{spectral_clustering}
 \title{Spectral clustering}
 \usage{
-spectral_clustering(sym_mat, K, weighted = F)
+spectral_clustering(mat, K, weighted = F)
 }
 \arguments{
-\item{sym_mat}{symmetric matrix}
+\item{mat}{matrix}
 
 \item{K}{positive integer}
 

@@ -1,5 +1,5 @@
 rm(list=ls())
-load("../results/simulation_rho.RData")
+load("../results/simulation_rho_writeup4.RData")
 
 vec <- paramMat[1,]; n <- vec["n"]
 mem_prop1 <- vec["mem_prop1"]; mem_prop2 <- vec["mem_prop2"]; mem_prop3 <- vec["mem_prop3"]
@@ -17,15 +17,20 @@ res_mat <- sapply(1:length(res), function(i){
   apply(tmp, 1, mean)
 })
 
+res_mat <- res_mat[c("res_greedy", #black 
+                     "res_sum_T", "res_sum_F", # green
+                     "res_ss_T","res_ss_F", # blue
+                     "res_ss_debias_T","res_ss_debias_F"),] # red
 png("../figures/simulation_rho.png", height = 1500, width = 2000, units = "px", res = 300)
-lty_vec <- c(1,1,1,2,1); lwd_vec <- c(2,2,2,1,2)
+lty_vec <- c(1,1,2,1,2,1,2); lwd_vec <- c(2,2,1,2,2,2,2); col_vec <- c(1,3,3,4,4,2,2)
 par(mar = c(5,5,5,1))
+
 plot(NA, xlim = range(paramMat[,"rho"]), ylim = range(res_mat), xlab = "Sparisity (rho)",
      ylab = "Total clustering accuracy\n(Averaged over 100 trials)", main = "Clustering accuracy across different methods")
 for(i in 1:nrow(res_mat)){
-  graphics::lines(x = paramMat[,"rho"], y = res_mat[i,], col = i, 
+  graphics::lines(x = paramMat[,"rho"], y = res_mat[i,], col = col_vec[i], 
                   lwd = lwd_vec[i], lty = lty_vec[i])
-  graphics::points(x = paramMat[,"rho"], y = res_mat[i,], col = i, 
+  graphics::points(x = paramMat[,"rho"], y = res_mat[i,], col = col_vec[i], 
                   pch = 16, cex = lwd_vec[i])
 }
 

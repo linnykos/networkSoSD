@@ -4,14 +4,14 @@
 \alias{.svd_projection}
 \title{Do an SVD projection}
 \usage{
-.svd_projection(adj_mat, K, weighted = F)
+.svd_projection(mat, K, weighted = F)
 }
 \arguments{
-\item{adj_mat}{numeric matrix with \code{n} rows and \code{n} columns}
-
 \item{K}{positive integer less than \code{n}}
 
 \item{weighted}{boolean}
+
+\item{adj_mat}{numeric matrix with \code{n} rows and \code{n} columns}
 }
 \value{
 numeric matrix
