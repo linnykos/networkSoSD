@@ -58,7 +58,7 @@ criterion <- function(dat, vec, y){
   res3 <- networkSoSD::spectral_clustering(agg_network, K = K, weighted = F)
   
   # try naive method of flattening
-  flat_mat <- networkSoSD::flatten(adj_list)
+  flat_mat <- networkSoSD::flatten(dat$adj_list)
   res4 <- networkSoSD::spectral_clustering(flat_mat, K = K, weighted = F)
   
   ### now all the weighted versions
@@ -71,7 +71,7 @@ criterion <- function(dat, vec, y){
   res3b <- networkSoSD::spectral_clustering(agg_network, K = K, weighted = T)
   
   # try naive method of flattening
-  flat_mat <- networkSoSD::flatten(adj_list)
+  flat_mat <- networkSoSD::flatten(dat$adj_list)
   res4b <- networkSoSD::spectral_clustering(flat_mat, K = K, weighted = T)
   
   ### now the greedy method
