@@ -33,11 +33,16 @@ aggregate_networks <- function(adj_list, method = "ss_debias",
 #' @param mat matrix
 #' @param K positive integer
 #' @param weighted boolean
+#' @param row_normalize boolean
 #'
 #' @return membership vector
 #' @export
-spectral_clustering <- function(mat, K, weighted = F){
+spectral_clustering <- function(mat, K, weighted = F, row_normalize = F){
   svd_mat <- .svd_projection(mat, K = K, weighted = weighted)
+  
+  if(row_normalize){
+    svd_mat <- t(apply(svd_mat, 1, function(x){x/.l2norm(x)}))
+  }
   
   stats::kmeans(svd_mat, centers = K, nstart = 20)$cluster
 }

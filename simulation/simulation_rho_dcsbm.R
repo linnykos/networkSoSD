@@ -4,10 +4,10 @@ library(networkSoSD)
 
 session_info <- sessionInfo()
 date_of_run <- Sys.time()
-source_code_info <- readLines("../simulation/simulation_rho.R")
-run_suffix <- "_writeup4"
+source_code_info <- readLines("../simulation/simulation_rho_dcsbm.R")
+run_suffix <- ""
 
-paramMat <- cbind(500, 100, seq(0.025, 0.2, length.out = 15), 0.4, 0.1, 0.5)
+paramMat <- cbind(500, 100, seq(0.1, 1, length.out = 15), 0.4, 0.1, 0.5)
 colnames(paramMat) <- c("n", "L", "rho", "mem_prop1", "mem_prop2", "mem_prop3")
 
 .l2norm <- function(x){sqrt(sum(x^2))}
@@ -35,6 +35,14 @@ rule <- function(vec){
   
   prob_mat1 <- networkSoSD::compute_prob_mat(rho*B1, membership_vec)
   prob_mat2 <- networkSoSD::compute_prob_mat(rho*B2, membership_vec)
+  
+  degree_vec <- c(seq(0.1, 1, length.out = 0.4*n), 
+                  seq(0.1, 1, length.out = 0.1*n), 
+                  seq(0.1, 1, length.out = 0.5*n))
+  
+  prob_mat1 <- .mult_mat_vec(.mult_vec_mat(degree_vec, prob_mat1), degree_vec)
+  prob_mat2 <- .mult_mat_vec(.mult_vec_mat(degree_vec, prob_mat2), degree_vec)
+
   prob_list <- lapply(1:L, function(i){if(i <= L/2) prob_mat1 else prob_mat2})
   
   adj_list <- lapply(1:L, function(i){networkSoSD::generate_adjaceny_mat(prob_list[[i]])})
@@ -73,10 +81,7 @@ criterion <- function(dat, vec, y){
   # try naive method of flattening
   flat_mat <- networkSoSD::flatten(dat$adj_list)
   res4b <- networkSoSD::spectral_clustering(flat_mat, K = K, weighted = T)
-  
-  ### now the greedy method
-  res5 <- networkSoSD::greedy_clustering(dat$adj_list, K = K)$cluster
-  
+
   list(res_ss_debias_F = res1, res_ss_debias_T = res1b, 
        res_sum_F = res2, res_sum_T = res2b, 
        res_ss_F = res3, res_ss_T = res3b,
@@ -92,7 +97,7 @@ criterion <- function(dat, vec, y){
 res <- simulation::simulation_generator(rule = rule, criterion = criterion,
                                         paramMat = paramMat, trials = trials,
                                         cores = ncores, as_list = T,
-                                        filepath = "../results/simulation_rho_tmp.RData",
+                                        filepath = "../results/simulation_rho_dcsbm_tmp.RData",
                                         verbose = T)
 
-save.image(paste0("../results/simulation_rho", run_suffix, ".RData"))
+save.image(paste0("../results/simulation_rho_dcsbm", run_suffix, ".RData"))
