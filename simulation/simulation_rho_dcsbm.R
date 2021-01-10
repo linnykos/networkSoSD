@@ -5,7 +5,7 @@ library(networkSoSD)
 session_info <- sessionInfo()
 date_of_run <- Sys.time()
 source_code_info <- readLines("../simulation/simulation_rho_dcsbm.R")
-run_suffix <- ""
+run_suffix <- "_equaldeg"
 
 paramMat <- cbind(500, 100, seq(0.1, 1, length.out = 19), 0.4, 0.1, 0.5)
 colnames(paramMat) <- c("n", "L", "rho", "mem_prop1", "mem_prop2", "mem_prop3")
@@ -36,9 +36,12 @@ rule <- function(vec){
   prob_mat1 <- networkSoSD::compute_prob_mat(rho*B1, membership_vec)
   prob_mat2 <- networkSoSD::compute_prob_mat(rho*B2, membership_vec)
   
-  degree_vec <- c(seq(0.1, 0.2, length.out = 0.2*n), seq(0.9, 1, length.out = 0.2*n), 
-                  rep(0.1, 0.1*n), 
-                  seq(0.1, 0.2, length.out = 0.2*n),  seq(0.9, 1, length.out = 0.3*n))
+  # degree_vec <- c(seq(0.1, 0.2, length.out = 0.2*n), seq(0.9, 1, length.out = 0.2*n), 
+  #                 rep(0.1, 0.1*n), 
+  #                 seq(0.1, 0.2, length.out = 0.2*n),  seq(0.9, 1, length.out = 0.3*n))
+  degree_vec <- c(seq(0.1, 1, length.out = 0.4*n),
+                  seq(0.1, 1, length.out = 0.1*n),
+                  seq(0.1, 1, length.out = 0.5*n))
   
   prob_mat1 <- networkSoSD:::.mult_mat_vec(networkSoSD:::.mult_vec_mat(degree_vec, prob_mat1), degree_vec)
   prob_mat2 <- networkSoSD:::.mult_mat_vec(networkSoSD:::.mult_vec_mat(degree_vec, prob_mat2), degree_vec)
@@ -73,6 +76,7 @@ criterion <- function(dat, vec, y){
   #############
   ### now all the weighted versions
   ##############
+  
   agg_network <- networkSoSD::aggregate_networks(dat$adj_list, method = "ss_debias")
   res1b <- networkSoSD::spectral_clustering(agg_network, K = K, weighted = T, row_normalize = T)
   
@@ -92,11 +96,23 @@ criterion <- function(dat, vec, y){
   agg_network <- networkSoSD::aggregate_networks(dat$adj_list, method = "ss_debias2")
   res5b <- networkSoSD::spectral_clustering(agg_network, K = K, weighted = T, row_normalize = T)
   
+  #############
+  ### try not row-normalizing for a baseline comparison
+  ##############
+  
+  agg_network <- networkSoSD::aggregate_networks(dat$adj_list, method = "ss_debias")
+  res1c <- networkSoSD::spectral_clustering(agg_network, K = K, weighted = T, row_normalize = F)
+  
+  agg_network <- networkSoSD::aggregate_networks(dat$adj_list, method = "ss")
+  res3c <- networkSoSD::spectral_clustering(agg_network, K = K, weighted = T, row_normalize = F)
+  
+  
   list(res_ss_debias_F = res1, res_ss_debias_T = res1b, 
        res_sum_F = res2, res_sum_T = res2b, 
        res_ss_F = res3, res_ss_T = res3b,
        res_flat_F = res4, res_flat_T = res4b,
-       res_ss_debias2_F = res5, res_ss_debias2_T = res5b)
+       res_ss_debias2_F = res5, res_ss_debias2_T = res5b,
+       res_ss_debias_T_sbm = res1c, res_ss_T_sbm = res3c)
 }
 
 ## i <- 15; y <- 1; set.seed(y); zz <- criterion(rule(paramMat[i,]), paramMat[i,], y); zz
