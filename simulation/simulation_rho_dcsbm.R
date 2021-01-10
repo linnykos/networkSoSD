@@ -36,12 +36,12 @@ rule <- function(vec){
   prob_mat1 <- networkSoSD::compute_prob_mat(rho*B1, membership_vec)
   prob_mat2 <- networkSoSD::compute_prob_mat(rho*B2, membership_vec)
   
-  degree_vec <- c(seq(0.1, 1, length.out = 0.4*n), 
-                  seq(0.1, 1, length.out = 0.1*n), 
-                  seq(0.1, 1, length.out = 0.5*n))
+  degree_vec <- c(seq(0.2, 0.3, length.out = 0.2*n), seq(0.7, 0.8, length.out = 0.2*n), 
+                  rep(0.5, 0.1*n), 
+                  seq(0.1, 0.2, length.out = 0.2*n),  seq(0.9, 1, length.out = 0.3*n))
   
-  prob_mat1 <- .mult_mat_vec(.mult_vec_mat(degree_vec, prob_mat1), degree_vec)
-  prob_mat2 <- .mult_mat_vec(.mult_vec_mat(degree_vec, prob_mat2), degree_vec)
+  prob_mat1 <- networkSoSD:::.mult_mat_vec(networkSoSD:::.mult_vec_mat(degree_vec, prob_mat1), degree_vec)
+  prob_mat2 <- networkSoSD:::.mult_mat_vec(networkSoSD:::.mult_vec_mat(degree_vec, prob_mat2), degree_vec)
 
   prob_list <- lapply(1:L, function(i){if(i <= L/2) prob_mat1 else prob_mat2})
   
@@ -52,44 +52,54 @@ rule <- function(vec){
 
 criterion <- function(dat, vec, y){
   agg_network <- networkSoSD::aggregate_networks(dat$adj_list, method = "ss_debias")
-  res1 <- networkSoSD::spectral_clustering(agg_network, K = K, weighted = F)
+  res1 <- networkSoSD::spectral_clustering(agg_network, K = K, weighted = F, row_normalize = T)
   
   # try naive method of adding
   agg_network <- networkSoSD::aggregate_networks(dat$adj_list, method = "sum")
-  res2 <- networkSoSD::spectral_clustering(agg_network, K = K, weighted = F)
+  res2 <- networkSoSD::spectral_clustering(agg_network, K = K, weighted = F, row_normalize = T)
   
   # try naive method of ss
   agg_network <- networkSoSD::aggregate_networks(dat$adj_list, method = "ss")
-  res3 <- networkSoSD::spectral_clustering(agg_network, K = K, weighted = F)
+  res3 <- networkSoSD::spectral_clustering(agg_network, K = K, weighted = F, row_normalize = T)
   
   # try naive method of flattening
   flat_mat <- networkSoSD::flatten(dat$adj_list)
-  res4 <- networkSoSD::spectral_clustering(flat_mat, K = K, weighted = F)
+  res4 <- networkSoSD::spectral_clustering(flat_mat, K = K, weighted = F, row_normalize = T)
   
+  # try less aggressive debiasing
+  agg_network <- networkSoSD::aggregate_networks(dat$adj_list, method = "ss_debias2")
+  res5 <- networkSoSD::spectral_clustering(agg_network, K = K, weighted = F, row_normalize = T)
+  
+  #############
   ### now all the weighted versions
+  ##############
   agg_network <- networkSoSD::aggregate_networks(dat$adj_list, method = "ss_debias")
-  res1b <- networkSoSD::spectral_clustering(agg_network, K = K, weighted = T)
+  res1b <- networkSoSD::spectral_clustering(agg_network, K = K, weighted = T, row_normalize = T)
   
   # try naive method of adding
   agg_network <- networkSoSD::aggregate_networks(dat$adj_list, method = "sum")
-  res2b <- networkSoSD::spectral_clustering(agg_network, K = K, weighted = T)
+  res2b <- networkSoSD::spectral_clustering(agg_network, K = K, weighted = T, row_normalize = T)
   
   # try naive method of ss
   agg_network <- networkSoSD::aggregate_networks(dat$adj_list, method = "ss")
-  res3b <- networkSoSD::spectral_clustering(agg_network, K = K, weighted = T)
+  res3b <- networkSoSD::spectral_clustering(agg_network, K = K, weighted = T, row_normalize = T)
   
   # try naive method of flattening
   flat_mat <- networkSoSD::flatten(dat$adj_list)
-  res4b <- networkSoSD::spectral_clustering(flat_mat, K = K, weighted = T)
+  res4b <- networkSoSD::spectral_clustering(flat_mat, K = K, weighted = T, row_normalize = T)
 
+  # try less aggressive debiasing
+  agg_network <- networkSoSD::aggregate_networks(dat$adj_list, method = "ss_debias2")
+  res5b <- networkSoSD::spectral_clustering(agg_network, K = K, weighted = T, row_normalize = T)
+  
   list(res_ss_debias_F = res1, res_ss_debias_T = res1b, 
        res_sum_F = res2, res_sum_T = res2b, 
        res_ss_F = res3, res_ss_T = res3b,
        res_flat_F = res4, res_flat_T = res4b,
-       res_greedy = res5)
+       res_ss_debias2_F = res5, res_ss_debias2_T = res5b)
 }
 
-## i <- 1; y <- 1; set.seed(y); zz <- criterion(rule(paramMat[i,]), paramMat[i,], y); zz
+## i <- 10; y <- 1; set.seed(y); zz <- criterion(rule(paramMat[i,]), paramMat[i,], y); zz
 
 #########################
 

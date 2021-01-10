@@ -4,7 +4,7 @@
 \alias{spectral_clustering}
 \title{Spectral clustering}
 \usage{
-spectral_clustering(mat, K, weighted = F)
+spectral_clustering(mat, K, weighted = F, row_normalize = F)
 }
 \arguments{
 \item{mat}{matrix}
@@ -12,6 +12,8 @@ spectral_clustering(mat, K, weighted = F)
 \item{K}{positive integer}
 
 \item{weighted}{boolean}
+
+\item{row_normalize}{boolean}
 }
 \value{
 membership vector
