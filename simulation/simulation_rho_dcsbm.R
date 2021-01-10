@@ -7,7 +7,7 @@ date_of_run <- Sys.time()
 source_code_info <- readLines("../simulation/simulation_rho_dcsbm.R")
 run_suffix <- ""
 
-paramMat <- cbind(500, 100, seq(0.1, 1, length.out = 15), 0.4, 0.1, 0.5)
+paramMat <- cbind(500, 100, seq(0.1, 1, length.out = 19), 0.4, 0.1, 0.5)
 colnames(paramMat) <- c("n", "L", "rho", "mem_prop1", "mem_prop2", "mem_prop3")
 
 .l2norm <- function(x){sqrt(sum(x^2))}
@@ -36,8 +36,8 @@ rule <- function(vec){
   prob_mat1 <- networkSoSD::compute_prob_mat(rho*B1, membership_vec)
   prob_mat2 <- networkSoSD::compute_prob_mat(rho*B2, membership_vec)
   
-  degree_vec <- c(seq(0.2, 0.3, length.out = 0.2*n), seq(0.7, 0.8, length.out = 0.2*n), 
-                  rep(0.5, 0.1*n), 
+  degree_vec <- c(seq(0.1, 0.2, length.out = 0.2*n), seq(0.9, 1, length.out = 0.2*n), 
+                  rep(0.1, 0.1*n), 
                   seq(0.1, 0.2, length.out = 0.2*n),  seq(0.9, 1, length.out = 0.3*n))
   
   prob_mat1 <- networkSoSD:::.mult_mat_vec(networkSoSD:::.mult_vec_mat(degree_vec, prob_mat1), degree_vec)
@@ -99,7 +99,7 @@ criterion <- function(dat, vec, y){
        res_ss_debias2_F = res5, res_ss_debias2_T = res5b)
 }
 
-## i <- 10; y <- 1; set.seed(y); zz <- criterion(rule(paramMat[i,]), paramMat[i,], y); zz
+## i <- 15; y <- 1; set.seed(y); zz <- criterion(rule(paramMat[i,]), paramMat[i,], y); zz
 
 #########################
 

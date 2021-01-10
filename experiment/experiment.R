@@ -35,8 +35,8 @@ rule <- function(vec){
   prob_mat1 <- networkSoSD::compute_prob_mat(rho*B1, membership_vec)
   prob_mat2 <- networkSoSD::compute_prob_mat(rho*B2, membership_vec)
   
-  degree_vec <- c(seq(0.2, 0.3, length.out = 0.2*n), seq(0.7, 0.8, length.out = 0.2*n), 
-                  rep(0.5, 0.1*n), 
+  degree_vec <- c(seq(0.1, 0.2, length.out = 0.2*n), seq(0.9, 1, length.out = 0.2*n), 
+                  rep(0.1, 0.1*n), 
                   seq(0.1, 0.2, length.out = 0.2*n),  seq(0.9, 1, length.out = 0.3*n))
    
   prob_mat1 <- networkSoSD:::.mult_mat_vec(networkSoSD:::.mult_vec_mat(degree_vec, prob_mat1), degree_vec)
@@ -49,23 +49,22 @@ rule <- function(vec){
   list(adj_list = adj_list, prob_list = prob_list)
 }
 
-i <- 10; y <- 1; set.seed(y); dat <- rule(paramMat[i,])
+i <- 15; y <- 1; set.seed(y); dat <- rule(paramMat[i,])
 prob_agg_network <- networkSoSD::aggregate_networks(dat$prob_list, method = "ss")
 svd_mat <- .svd_projection(prob_agg_network, K = 3, weighted = F)
 svd_mat <- t(apply(svd_mat, 1, function(x){x/.l2norm(x)}))
 # image(t(svd_mat))
-tmp <- prob_agg_network; diag(tmp) <- 0; quantile(tmp)
-quantile(diag(prob_agg_network)); plot(diag(prob_agg_network)); plot(colSums(prob_agg_network))
+tmp <- prob_agg_network; diag(tmp) <- 0; quantile(tmp); quantile(diag(prob_agg_network));
+par(mfrow = c(1,2)); plot(diag(prob_agg_network)); plot(colSums(tmp))
 
 ####
 agg_network <- networkSoSD::aggregate_networks(dat$adj_list, method = "ss")
 # image(agg_network)
-# plot(diag(agg_network))
-tmp <- agg_network; diag(tmp) <- 0; quantile(tmp)
-quantile(diag(agg_network))
+tmp <- agg_network; diag(tmp) <- 0; quantile(tmp); quantile(diag(agg_network))
+par(mfrow = c(1,2)); plot(diag(prob_agg_network)); plot(colSums(tmp))
 svd_mat <- .svd_projection(agg_network, K = 3, weighted = F)
 svd_mat <- t(apply(svd_mat, 1, function(x){x/.l2norm(x)}))
-# image(t(svd_mat))
+image(t(svd_mat))
 networkSoSD::spectral_clustering(agg_network, K = K, weighted = F, row_normalize = T)
 
 
