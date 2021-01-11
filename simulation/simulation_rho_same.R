@@ -8,11 +8,11 @@ source_code_info <- readLines("../simulation/simulation_rho_same.R")
 run_suffix <- "_same"
 
 .l2norm <- function(x){sqrt(sum(x^2))}
-vec1 <- c(1,1,sqrt(2))
-vec2 <- c(1,1,-sqrt(2))
-vec3 <- c(-1,1,0)
+vec1 <- c(1,2,2)/3
+vec2 <- c(-2,-1,2)/3
+vec3 <- c(2,-2,1)/3
 eigen_mat <- cbind(vec1/.l2norm(vec1), vec2/.l2norm(vec2), vec3/.l2norm(vec3))
-B1 <- eigen_mat %*% diag(c(1.5, 0.2, 0.4)) %*% t(eigen_mat)
+B1 <- eigen_mat %*% diag(c(1, 0.3, 0.4)) %*% t(eigen_mat)
 K <- 3
 
 zz <- solve(B1, rep(1,3)); zz <- zz/sum(zz)
@@ -92,7 +92,7 @@ criterion <- function(dat, vec, y){
        res_greedy = res6)
 }
 
-## i <- 1; y <- 1; set.seed(y); zz <- criterion(rule(paramMat[i,]), paramMat[i,], y); zz
+## i <- 11; y <- 1; set.seed(y); zz <- criterion(rule(paramMat[i,]), paramMat[i,], y); zz
 
 #########################
 
