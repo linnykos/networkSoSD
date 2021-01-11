@@ -134,8 +134,12 @@ greedy_clustering <- function(adj_list, K, nstart = 10, iter_max = 100, verbose 
   counts <- summary(factor(idx, 1:K))
   empties <- which(counts == 0)
   for (i in empties){
-    from <- sample(which(counts > 1), 1, 0)
-    lonely <- sample(which(idx == from), 1, 0)
+    from <- sample(which(counts > 1), 1)
+    if(length(from) == 1){
+      lonely <- which(idx == from)[1]
+    } else {
+      lonely <- sample(which(idx == from), 1)
+    }
     idx[lonely] <- i
     counts[i] <- 1
     counts[from] <- counts[from] - 1

@@ -92,7 +92,7 @@ criterion <- function(dat, vec, y){
        res_greedy = res6)
 }
 
-## i <- 11; y <- 1; set.seed(y); zz <- criterion(rule(paramMat[i,]), paramMat[i,], y); zz
+## i <- 1; y <- 2; set.seed(y); zz <- criterion(rule(paramMat[i,]), paramMat[i,], y); zz
 
 #########################
 

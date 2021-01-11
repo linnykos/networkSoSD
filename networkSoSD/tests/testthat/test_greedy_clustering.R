@@ -138,6 +138,18 @@ test_that(".resolve_empty_clusters is correct", {
   expect_true(all(bool_vec))
 })
 
+test_that(".resolve_empty_clusters in extreme instances", {
+  trials <- 100
+  
+  bool_vec <- sapply(1:trials, function(x){
+    set.seed(x)
+    res <- .resolve_empty_clusters(rep(3,10), K=3)
+    length(res) == 10
+  })
+  
+  expect_true(all(bool_vec))
+})
+
 ###################################
 
 ## .move_indices is correct
