@@ -58,7 +58,18 @@ bias_vec <- sapply(1:nrow(paramMat), function(i){
   ratio2 # note: ratio1 is always high, since vec1[K+1] = 0
 })
 
-plot(paramMat[,"rho"], bias_vec)
+png("../figures/simulation_bias.png", height = 1200, width = 1400, units = "px", res = 300)
+plot(NA, xlim = range(paramMat[,"rho"]), ylim = range(bias_vec), 
+     xlab = "Sparisity (rho)", ylab = "Eigengap (ratio)",
+     main = "Eigengap induced by diagonal bias")
+for(x in paramMat[seq(1, nrow(paramMat), by = 2), "rho"]){
+  lines(rep(x,2), c(-1e4,1e4), col = "gray", lwd = 0.5, lty = 2)
+}
+for(y in seq(0,0.1,length.out = 6)){
+  lines(c(-1e4,1e4), rep(y,2), col = "gray", lwd = 0.5, lty = 2)
+}
+points(paramMat[,"rho"], bias_vec, pch = 16)
+graphics.off()
 
 #####################
 
@@ -77,7 +88,7 @@ color_name_vec <- c("yellow", "skyblue", "green", "blue", "orange", "gray", "red
 color_vec <- color_func(1)
 color_vec2 <- color_func(0.1)
 
-i <- 9; y <- 29; set.seed(y); dat <- rule(paramMat[i,])
+i <- 10; y <- 29; set.seed(y); dat <- rule(paramMat[i,])
 agg_network1 <- networkSoSD::aggregate_networks(dat$adj_list, method = "ss_debias")
 agg_network2 <- networkSoSD::aggregate_networks(dat$adj_list, method = "ss")
 eigen1 <- .svd_projection(agg_network1, K = 3, weighted = F)
@@ -105,7 +116,8 @@ membership_vec <- c(rep(1, mem_prop1*n), rep(2, mem_prop2*n), rep(3, mem_prop3*n
 idx <- c(1,which(diff(membership_vec) > 0)+1)
 breaks <- seq(0.5, max(membership_vec)+1, by = 1)
 
-par(mfrow = c(2,2), mar = c(1,1,1,1))
+png("../figures/simulation_3d.png", height = 2500, width = 2500, units = "px", res = 300)
+par(mfrow = c(2,2), mar = c(1, 0.5, 1, 0.5))
 max_diff <- max(apply(rbind(eigen1, eigen2), 2, function(x){diff(range(x))/2}))
 max_diff <- max_diff/2.5
 lim_list <- lapply(1:3, function(x){
@@ -144,3 +156,4 @@ plot3D::scatter3D(x = eigen1[,1], y = eigen1[,2], z = eigen1[,3],
                   xlim = lim_list[[1]], ylim = lim_list[[2]], zlim = lim_list[[3]],
                   phi = 225, theta = 190, 
                   xlab = "Eigenvector 1", ylab = "Eigenvector 2", zlab = "Eigenvector 3")
+graphics.off()

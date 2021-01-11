@@ -1,5 +1,9 @@
 # requires both vec1 and vec2 to have the same number of unique clusters
-align_two_membership_vectors <- function(vec1, vec2){
+align_two_membership_vectors <- function(vec1, vec2, override = F){
+  if(override & length(unique(vec1)) > length(unique(vec2))){
+    len <- length(unique(vec1))
+    vec2[1:len] <- 1:len
+  }
   stopifnot(length(unique(vec1)) == length(unique(vec2)))
   
   K <- length(unique(vec1))

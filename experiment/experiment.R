@@ -1,4 +1,5 @@
 rm(list=ls())
+library(simulation)
 library(networkSoSD)
 
 session_info <- sessionInfo()
@@ -39,14 +40,3 @@ rule <- function(vec){
   
   list(adj_list = adj_list)
 }
-
-i <- 1; y <- 2; set.seed(y);
-dat <- rule(paramMat[i,]);
-vec <- paramMat[i,]
-
-### now the greedy method
-res6 <- networkSoSD::greedy_clustering(dat$adj_list, K = K)$cluster
-
-###########################
-
-
