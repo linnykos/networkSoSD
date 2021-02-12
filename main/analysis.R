@@ -1,7 +1,7 @@
-rm(list=ls())
+rm(list=ls()); set.seed(10)
 
-set.seed(10)
-library(networkSoSD)
+library(networkSoSD); library(org.Mmu.eg.db); library(RSpectra)
+
 load("../../pnas/pnas.RData")
 session_info <- sessionInfo()
 date_of_run <- Sys.time()
@@ -82,7 +82,8 @@ K <- 8
 clustering_res <- networkSoSD::spectral_clustering(total_network, K = K, weighted = F, row_normalize = F)
 
 save_var <- c("adj_list", "entrez_id", "gene_name", "entrez_id2", "gene_name2", "power_law",
-              "total_network", "svd_res", "clustering_res", "K")
+              "total_network", "svd_res", "clustering_res", "K", "session_info",
+              "date_of_run", "source_code_info", "run_suffix")
 var_list <- ls()
 var_list <- var_list[!var_list %in% save_var]
 rm(list = var_list)

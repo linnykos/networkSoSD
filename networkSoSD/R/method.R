@@ -32,22 +32,29 @@ aggregate_networks <- function(adj_list, method = "ss_debias",
 }
 
 #' Spectral clustering
+#' 
+#' When the model is DC-SBM, both \code{weighted} and \code{row_normalize} should be \code{TRUE}.
 #'
 #' @param mat matrix
 #' @param K positive integer
 #' @param weighted boolean
-#' @param row_normalize boolean
+#' @param row_normalize boolean.
 #'
 #' @return membership vector
 #' @export
 spectral_clustering <- function(mat, K, weighted = F, row_normalize = F){
-  svd_mat <- .svd_projection(mat, K = K, weighted = weighted)
+  svd_res <- .svd_truncated(mat, K = K, symmetric = T)
+  if(weighted){
+    svd_mat <- .mult_mat_vec(svd_res$u, svd_res$d)
+  } else {
+    svd_mat <- svd_res$u
+  }
   
   if(row_normalize){
     svd_mat <- t(apply(svd_mat, 1, function(x){x/.l2norm(x)}))
   }
   
-  stats::kmeans(svd_mat, centers = K, nstart = 20)$cluster
+  .safe_kmeans(svd_mat, K)
 }
 
 #' Flatten collection of adjacency matrices
@@ -70,34 +77,16 @@ flatten <- function(adj_list){
 
 ##################
 
-#' Do an SVD projection
-#'
-#' Uses \code{RSpectra::svds} to compute the \code{k} leading singular vectors, but
-#' sometimes there are numerical instability issues. In case of crashes, the code
-#' then uses the default \code{svd} function.
-#'
-#' @param mat numeric matrix with \code{n} rows and \code{n} columns
-#' @param K positive integer less than \code{n}
-#' @param weighted boolean
-#'
-#' @return numeric matrix
-.svd_projection <- function(mat, K, weighted = F){
-  stopifnot(nrow(mat) >= K, ncol(mat) >= nrow(mat))
-  
-  if(min(dim(mat)) > K+2){
-    res <- tryCatch({
-      # ask for more singular values than needed to ensure stability
-      RSpectra::svds(mat, k = K + 2)
-    }, error = function(e){
-      svd(mat)
-    })
-  } else {
-    res <- svd(mat)
-  }
-  
-  if(weighted){
-    .mult_mat_vec(res$u[,1:K, drop = F], sqrt(abs(res$d[1:K])))
-  } else {
-    res$u[,1:K,drop = F]
-  }
+.safe_kmeans <- function(mat, K){
+  tryCatch({
+    stats::kmeans(mat, centers = K)$cluster
+  }, error = function(e){
+    range_vec <- apply(mat, 2, function(x){abs(diff(range(x)))})
+    stopifnot(!all(range_vec == 0))
+    idx <- which.min(range_vec)
+    
+    mat[,idx] <- mat[,idx] + stats::rnorm(nrow(mat), sd = min(range_vec[range_vec > 0]))
+    
+    stats::kmeans(mat, centers = K)$cluster
+  })
 }

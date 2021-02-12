@@ -13,11 +13,11 @@ spectral_clustering(mat, K, weighted = F, row_normalize = F)
 
 \item{weighted}{boolean}
 
-\item{row_normalize}{boolean}
+\item{row_normalize}{boolean.}
 }
 \value{
 membership vector
 }
 \description{
-Spectral clustering
+When the model is DC-SBM, both \code{weighted} and \code{row_normalize} should be \code{TRUE}.
 }

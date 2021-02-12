@@ -74,3 +74,31 @@ align_two_membership_vectors <- function(vec1, vec2, override = F){
   stopifnot(is.matrix(mat), !is.matrix(vec), length(vec) == ncol(mat))
   mat * rep(vec, rep(nrow(mat), length(vec)))
 }
+
+.svd_truncated <- function(mat, K = min(dim(mat)), symmetric = F){
+  stopifnot(min(dim(mat)) >= K)
+  
+  if(min(dim(mat)) > 2*(K+2)){
+    res <- tryCatch({
+      # ask for more singular values than needed to ensure stability
+      if(symmetric){
+        tmp <- irlba::partial_eigen(mat, n = K+2)
+        list(u = tmp$vectors, d = tmp$values, v = tmp$vectors)
+      } else {
+        irlba::irlba(mat, nv = K+2)
+      }
+    }, error = function(e){
+      RSpectra::svds(mat, k = K+2)
+    })
+  } else {
+    res <- svd(mat)
+  }
+  
+  res$u <- res$u[,1:K, drop = F]; res$v <- res$v[,1:K, drop = F]; res$d <- res$d[1:K]
+  
+  # pass row-names and column-names
+  if(length(rownames(mat)) != 0) rownames(res$u) <- rownames(mat)
+  if(length(colnames(mat)) != 0) rownames(res$v) <- colnames(mat)
+  
+  res
+}

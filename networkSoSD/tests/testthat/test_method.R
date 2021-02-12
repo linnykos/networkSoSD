@@ -1,13 +1,12 @@
 context("Test aggregate")
 
-generate_dataset <- function(dcsbm = F){
+generate_dataset <- function(dcsbm = F, rho = 1){
   vec1 <- c(1,1,sqrt(2))
   vec2 <- c(1,1,-sqrt(2))
   vec3 <- c(-1,1,0)
   eigen_mat <- cbind(vec1/.l2norm(vec1), vec2/.l2norm(vec2), vec3/.l2norm(vec3))
   B1 <- round(eigen_mat %*% diag(c(1.5, 0.2, 0.4)) %*% t(eigen_mat), 4)
   B2 <- round(eigen_mat %*% diag(c(1.5, 0.2, -0.4)) %*% t(eigen_mat), 4)
-  rho <- 1
   
   n <- ifelse(dcsbm, 200, 100)
   L <- 10
@@ -85,10 +84,10 @@ test_that("spectral_clustering works", {
 
 test_that("spectral_clustering works for DC-SBM", {
   set.seed(10)
-  adj_list <- generate_dataset(dcsbm = T)
+  adj_list <- generate_dataset(dcsbm = T, rho = 0.5)
   n <- nrow(adj_list[[1]]); L <- length(adj_list)
   agg_mat <- aggregate_networks(adj_list, method = "ss_debias")
-  res <- spectral_clustering(agg_mat, K = 3, weighted = F, row_normalize = T)
+  res <- spectral_clustering(agg_mat, K = 3, weighted = T, row_normalize = T)
 
   expect_true(length(res) == nrow(adj_list[[1]]))
   expect_true(all(res > 0))
@@ -116,12 +115,11 @@ test_that("spectral_clustering works with flattened matrices", {
   expect_true(all(1:max(res) %in% res))
 })
 
-
 #######################################
 
 ## flatten is correct
 
-test_that("spectral_clustering works", {
+test_that("flatten works", {
   set.seed(10)
   adj_list <- generate_dataset()
   n <- nrow(adj_list[[1]]); L <- length(adj_list)
@@ -131,3 +129,22 @@ test_that("spectral_clustering works", {
   expect_true(all(dim(res) == c(n, n*L)))
   expect_true(sum(is.na(res)) == 0)
 })
+
+#####################################
+
+## .safe_kmeans is correct
+
+test_that(".safe_kmeans works when there are not enough unique rows", {
+  trials <- 50
+  
+  bool_vec <- sapply(1:trials, function(x){
+    set.seed(10)
+    mat <- matrix(c(rep(1,5), rep(2,5)), 10, 20)
+    res <- .safe_kmeans(mat, K = 4)
+    
+    length(res) == nrow(mat) & length(unique(res)) == 4 & all(!res[1:5] %in% res[6:10]) & all(!res[6:10] %in% res[1:5])
+  })
+  
+  expect_true(all(bool_vec))
+})
+
