@@ -1,9 +1,9 @@
 rm(list=ls()); set.seed(10)
 
-library(networkSoSD); library(org.Mmu.eg.db); library(RSpectra)
+library(networkSoSD); library(org.Mmu.eg.db); library(RSpectra); library(irlba)
 
 load("../../pnas/pnas.RData")
-session_info <- sessionInfo()
+session_info <- devtools::session_info()
 date_of_run <- Sys.time()
 source_code_info <- readLines("../main/analysis.R")
 run_suffix <- ""
