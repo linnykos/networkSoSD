@@ -27,7 +27,7 @@ table(clustering_res2)
 table(clustering_res2)/nrow(adj_list[[1]])
 
 ## print out some stats
-quantile(sqrt(power_law)) 
+quantile(power_law)
 
 ## determine how many unique clusters there
 component_num <- sapply(adj_list, function(adj_mat){

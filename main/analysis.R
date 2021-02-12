@@ -68,7 +68,7 @@ power_law <- sapply(adj_list, function(adj_mat){
   y <- as.numeric(names(x))+1
   x <- as.numeric(x)
   
-  stats::cor(log(x),log(y))^2
+  abs(stats::cor(log(x),log(y)))
 })
 
 # lapply(adj_list, function(x){quantile(colSums(x))})
