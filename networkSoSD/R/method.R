@@ -47,7 +47,7 @@ spectral_clustering <- function(mat, K, weighted = F, row_normalize = F){
   if(weighted){
     svd_mat <- .mult_mat_vec(svd_res$u, svd_res$d)
   } else {
-    svd_mat <- svd_res$u
+    svd_mat <- svd_res$u * sqrt(nrow(mat)) # multiplying for numerical stability
   }
   
   if(row_normalize){
@@ -79,7 +79,7 @@ flatten <- function(adj_list){
 
 .safe_kmeans <- function(mat, K){
   tryCatch({
-    stats::kmeans(mat, centers = K)$cluster
+    stats::kmeans(mat, centers = K, nstart = 10)$cluster
   }, error = function(e){
     range_vec <- apply(mat, 2, function(x){abs(diff(range(x)))})
     stopifnot(!all(range_vec == 0))
@@ -87,6 +87,6 @@ flatten <- function(adj_list){
     
     mat[,idx] <- mat[,idx] + stats::rnorm(nrow(mat), sd = min(range_vec[range_vec > 0]))
     
-    stats::kmeans(mat, centers = K)$cluster
+    stats::kmeans(mat, centers = K, nstart = 10)$cluster
   })
 }

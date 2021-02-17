@@ -57,7 +57,7 @@ criterion <- function(dat, vec, y){
        res_ss_F = res3, res_flat_F = res4)
 }
 
-## i <- 1; y <- 1; set.seed(y); zz <- criterion(rule(paramMat[i,]), paramMat[i,], y); zz
+## i <- 9; y <- 1; set.seed(y); zz <- criterion(rule(paramMat[i,]), paramMat[i,], y); zz
 
 #########################
 

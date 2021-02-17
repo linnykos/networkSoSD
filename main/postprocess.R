@@ -18,7 +18,7 @@ color_vec <- color_func(1)
 
 ## first do some housekeeping
 # manually change the labeling of the clusters
-desired_order <- c(6,1,4,3,8,7,5,2)
+desired_order <- c(5,8,1,7,4,3,6,2)
 clustering_res2 <- rep(NA, length(clustering_res))
 for(i in 1:length(desired_order)){
   clustering_res2[which(clustering_res == desired_order[i])] <- i
@@ -98,6 +98,7 @@ graphics.off()
 ####################
 
 time_stamp <- c("0M", "12M", "3M", "48M", "E120", "E40", "E50", "E70", "E80", "E90")
+time_order <- c(7,9,8,10,6,1,2,3,4,5)
 # alternatively, run the following lines:
 # file_vec <- list.files("/raid6/Fuchen/monkey_data/PretimeA/")
 # file_vec <- file_vec[grep("All.*new.*", file_vec)]
@@ -106,61 +107,71 @@ time_stamp <- c("0M", "12M", "3M", "48M", "E120", "E40", "E50", "E70", "E80", "E
 #   strsplit(tmp, split = "\\.")[[1]][1]
 # }))
 
-gene_idx <- unlist(lapply(1:K, function(x){which(clustering_res2 == x)}))
+idx_odd <- seq(1, length(clustering_res2), by = 10)
+clustering_res2b <- clustering_res2[idx_odd]
+gene_idx <- unlist(lapply(1:K, function(x){idx_odd[which(clustering_res2b == x)]}))
 clockwise90 <- function(a) { t(a[nrow(a):1,]) } 
 for(i in 1:length(adj_list)){
   print(i)
-  png(paste0("../figures/Writeup4_pnas_adj", i, ".png"), height = 3000, width = 3000, units = "px", res = 300)
-  image(clockwise90(adj_list[[i]][gene_idx, gene_idx]), main = time_stamp[i], 
-        col = hcl.colors(12, "Cividis"))
+  tmp <- adj_list[[i]][gene_idx, gene_idx]
+  diag(tmp) <- -1
+  
+  png(paste0("../figures/pnas_adj", time_order[i], ".png"), height = 1500, width = 1300, units = "px", res = 300)
+  par(mar = c(2, 2, 4, 0.6))
+  image(clockwise90(tmp), main = paste0("Network for time ", time_stamp[i]), 
+        col = c("white", hcl.colors(2, "Cividis")),
+        breaks = c(-1.5, -.5, .5, 1.5))
   
   for(j in 1:(K-1)){
-    len <- length(which(clustering_res2 <= j))/length(clustering_res2)
-    lines(c(-1e4,1e4), rep(1-len,2), lwd = 2, lty = 2)
-    lines(rep(len,2), c(-1e4,1e4), lwd = 2, lty = 2)
+    len <- length(which(clustering_res2b <= j))/length(clustering_res2b)
+    lines(c(-1e4,1e4), rep(1-len,2), lwd = 2, lty = 2, col = 'white')
+    lines(rep(len,2), c(-1e4,1e4), lwd = 2, lty = 2, col = 'white')
   }
   
   graphics.off()
 }
 
-gene_idx <- unlist(lapply(1:K, function(x){which(clustering_res2 == x)}))
-clockwise90 <- function(a) { t(a[nrow(a):1,]) } 
-png(paste0("../figures/Writeup4_pnas_adj_all.png"), height = 3000, width = 3000, units = "px", res = 300)
-image(clockwise90(total_network[gene_idx, gene_idx]), main = "All", 
-      col = hcl.colors(12, "Cividis"))
-for(j in 1:(K-1)){
-  len <- length(which(clustering_res2 <= j))/length(clustering_res2)
-  lines(c(-1e4,1e4), rep(1-len,2), lwd = 2, lty = 2)
-  lines(rep(len,2), c(-1e4,1e4), lwd = 2, lty = 2)
-}
-graphics.off()
+# gene_idx <- unlist(lapply(1:K, function(x){which(clustering_res2 == x)}))
+# clockwise90 <- function(a) { t(a[nrow(a):1,]) } 
+# png(paste0("../figures/Writeup4_pnas_adj_all.png"), height = 3000, width = 3000, units = "px", res = 300)
+# image(clockwise90(total_network[gene_idx, gene_idx]), main = "All", 
+#       col = hcl.colors(12, "Cividis"))
+# for(j in 1:(K-1)){
+#   len <- length(which(clustering_res2 <= j))/length(clustering_res2)
+#   lines(c(-1e4,1e4), rep(1-len,2), lwd = 2, lty = 2)
+#   lines(rep(len,2), c(-1e4,1e4), lwd = 2, lty = 2)
+# }
+# graphics.off()
 
-tmp <- networkSoSD::aggregate_networks(adj_list, method = 'sum')
-gene_idx <- unlist(lapply(1:K, function(x){which(clustering_res2 == x)}))
-clockwise90 <- function(a) { t(a[nrow(a):1,]) } 
-png(paste0("../figures/Writeup4_pnas_adj_all2.png"), height = 3000, width = 3000, units = "px", res = 300)
-image(clockwise90(tmp[gene_idx, gene_idx]), main = "All", 
-      col = hcl.colors(12, "Cividis"))
-for(j in 1:(K-1)){
-  len <- length(which(clustering_res2 <= j))/length(clustering_res2)
-  lines(c(-1e4,1e4), rep(1-len,2), lwd = 2, lty = 2)
-  lines(rep(len,2), c(-1e4,1e4), lwd = 2, lty = 2)
-}
-graphics.off()
-
-tmp_svd <- networkSoSD:::.svd_truncated(tmp, K = K)
-set.seed(10)
-umap_embedding3 <- Seurat::RunUMAP(networkSoSD:::.mult_mat_vec(tmp_svd$u, tmp_svd$d), verbose = F)@cell.embeddings
-col_umap <- color_vec[c(9,2:8)][clustering_res2]
-
-png(paste0("../figures/Writeup4_umap3.png"), height = 1500, width = 1500, units = "px", res = 300)
-plot(NA, xlim = range(umap_embedding3[,1]), ylim = range(umap_embedding3[,2]),
-     xlab = "UMAP dimension 1", ylab = "UMAP dimension 2",
-     main = "UMAP of spectral embedding", asp = T)
-idx <- which(clustering_res2 == 8)
-points(umap_embedding3[idx,1], umap_embedding3[idx,2], pch = 16, col = col_umap[idx])
-points(umap_embedding3[-idx,1], umap_embedding3[-idx,2], pch = 16, col = col_umap[-idx])
-graphics.off()
+# tmp <- networkSoSD::aggregate_networks(adj_list, method = 'sum')
+# gene_idx <- unlist(lapply(1:K, function(x){which(clustering_res2 == x)}))
+# tmp <- tmp[gene_idx, gene_idx]
+# diag(tmp) <- -1
+# clockwise90 <- function(a) { t(a[nrow(a):1,]) } 
+# png(paste0("../figures/pnas_adj_all.png"), height = 3000, width = 3000, units = "px", res = 300)
+# image(clockwise90(tmp), main = "All", 
+#       col = c("white", hcl.colors(2, "Cividis")),
+#       breaks = c(-1.5, -.5, .5, 1.5))
+# for(j in 1:(K-1)){
+#   len <- length(which(clustering_res2 <= j))/length(clustering_res2)
+#   lines(c(-1e4,1e4), rep(1-len,2), lwd = 2, lty = 2, col = 'white')
+#   lines(rep(len,2), c(-1e4,1e4), lwd = 2, lty = 2, col = 'white')
+# }
+# graphics.off()
+# 
+# tmp_svd <- networkSoSD:::.svd_truncated(tmp, K = K)
+# set.seed(10)
+# umap_embedding3 <- Seurat::RunUMAP(networkSoSD:::.mult_mat_vec(tmp_svd$u, tmp_svd$d), verbose = F)@cell.embeddings
+# col_umap <- color_vec[c(9,2:8)][clustering_res2]
+# 
+# png(paste0("../figures/Writeup4_umap3.png"), height = 1500, width = 1500, units = "px", res = 300)
+# plot(NA, xlim = range(umap_embedding3[,1]), ylim = range(umap_embedding3[,2]),
+#      xlab = "UMAP dimension 1", ylab = "UMAP dimension 2",
+#      main = "UMAP of spectral embedding", asp = T)
+# idx <- which(clustering_res2 == 8)
+# points(umap_embedding3[idx,1], umap_embedding3[idx,2], pch = 16, col = col_umap[idx])
+# points(umap_embedding3[-idx,1], umap_embedding3[-idx,2], pch = 16, col = col_umap[-idx])
+# graphics.off()
 
 ###################
 
