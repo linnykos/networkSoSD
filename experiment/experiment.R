@@ -1,53 +1,35 @@
 rm(list=ls())
-trials <- 50; K <- 3; n <- 100
-mem_prop1 <- 0.4; mem_prop2 <- 0.1; mem_prop3 <- 0.5
-membership_vec <- c(rep(1, mem_prop1*n), rep(2, mem_prop2*n), rep(3, mem_prop3*n))
-x = 4
+source("../simulation/Codes_Spectral_Matrix_Paul_Chen_AOS_2020.r")
 
-generate_dataset <- function(rho = 0.5){
-  vec1 <- c(1,1,sqrt(2))
-  vec2 <- c(1,1,-sqrt(2))
-  vec3 <- c(-1,1,0)
-  eigen_mat <- cbind(vec1/.l2norm(vec1), vec2/.l2norm(vec2), vec3/.l2norm(vec3))
-  B1 <- eigen_mat %*% diag(c(1.5, 0.2, 0.4)) %*% t(eigen_mat)
-  B2 <- eigen_mat %*% diag(c(1.5, 0.2, -0.4)) %*% t(eigen_mat)
-  K <- 3
+paramMat <- cbind(200, 30, seq(0.02, 0.06, length.out = 9), 0.5, 0.5)
+colnames(paramMat) <- c("n", "L", "rho", "mem_prop1", "mem_prop2")
+
+.l2norm <- function(x){sqrt(sum(x^2))}
+B1 <- matrix(c(3/4, sqrt(3)/8, sqrt(3)/8, 1/2), 2, 2)
+B2 <- matrix(c(7/8, 3*sqrt(3)/8, 3*sqrt(3)/8, 1/8), 2, 2)
+K <- ncol(B1)
+
+rule <- function(vec){
+  n <- vec["n"]; L <- vec["L"]; rho <- vec["rho"]
+  mem_prop1 <- vec["mem_prop1"]; mem_prop2 <- vec["mem_prop2"]
   
-  n <- 100; L <- 10
-  mem_prop1 <- 0.4; mem_prop2 <- 0.1; mem_prop3 <- 0.5
-  membership_vec <- c(rep(1, mem_prop1*n), rep(2, mem_prop2*n), rep(3, mem_prop3*n))
-  if(length(membership_vec) < n) membership_vec <- c(membership_vec, rep(3, n-length(membership_vec)))
+  membership_vec <- c(rep(1, mem_prop1*n), rep(2, mem_prop2*n))
+  if(length(membership_vec) < n) membership_vec <- c(membership_vec, rep(2, n-length(membership_vec)))
   
-  prob_mat1 <- compute_prob_mat(rho*B1, membership_vec)
-  prob_mat2 <- compute_prob_mat(rho*B2, membership_vec)
+  prob_mat1 <- networkSoSD::compute_prob_mat(rho*B1, membership_vec)
+  prob_mat2 <- networkSoSD::compute_prob_mat(rho*B2, membership_vec)
   prob_list <- lapply(1:L, function(i){if(i <= L/2) prob_mat1 else prob_mat2})
   
-  lapply(1:L, function(i){generate_adjaceny_mat(prob_list[[i]])})
+  adj_list <- lapply(1:L, function(i){networkSoSD::generate_adjaceny_mat(prob_list[[i]])})
+  
+  list(adj_list = adj_list)
 }
 
-set.seed(x)
-adj_list <- generate_dataset()
+dat <- rule(paramMat[1,])
+set.seed(10)
+res1 <- lmfo(dat$adj_list, n = nrow(dat$adj_list[[1]]), k = 2)
 
-flat_mat <- networkSoSD::flatten(adj_list)
-res1 <- networkSoSD::spectral_clustering(flat_mat, K = K, weighted = F)
+reg_val <- max(sapply(dat$adj_list, function(x){4*max(abs(eigen(x)$value))}))
+res2 <- coreg(dat$adj_list, n = nrow(dat$adj_list[[1]]), k = 2, beta = reg_val)
+res2[[length(dat$adj_list)+1]]
 
-# res2 <- greedy_refinement(adj_list, init_clust = res1, K = K)
-# 
-# vec <- align_two_membership_vectors(membership_vec, res1)
-# tab1 <- table(membership_vec, vec)
-# obj1 <- sum(diag(tab1))/sum(tab1)
-# 
-# vec <- align_two_membership_vectors(membership_vec, res2$cluster)
-# tab2 <- table(membership_vec, vec)
-# obj2 <- sum(diag(tab2))/sum(tab2)
-
-##################################################33
-init_clust <- res1
-adj_array <- .form_array(adj_list)
-idx <- init_clust; n <- length(init_clust)
-# deal with cluster that are empty
-idx <- .resolve_empty_clusters(idx, K)
-# compute centers and distances 
-centers <- .get_array_centers(adj_array, idx)
-D <- .get_array_distances(adj_array, centers, idx)
-image(t(D))

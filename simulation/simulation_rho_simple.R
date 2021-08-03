@@ -4,6 +4,7 @@ library(networkSoSD)
 
 session_info <- devtools::session_info()
 date_of_run <- Sys.time()
+source("../simulation/Codes_Spectral_Matrix_Paul_Chen_AOS_2020.r")
 source_code_info <- readLines("../simulation/simulation_rho_simple.R")
 run_suffix <- ""
 
@@ -39,22 +40,35 @@ rule <- function(vec){
 
 criterion <- function(dat, vec, y){
   agg_network <- networkSoSD::aggregate_networks(dat$adj_list, method = "ss_debias")
+  set.seed(10)
   res1 <- networkSoSD::spectral_clustering(agg_network, K = K, weighted = F)
   
   # try naive method of adding
   agg_network <- networkSoSD::aggregate_networks(dat$adj_list, method = "sum")
+  set.seed(10)
   res2 <- networkSoSD::spectral_clustering(agg_network, K = K, weighted = F)
   
   # try naive method of ss
   agg_network <- networkSoSD::aggregate_networks(dat$adj_list, method = "ss")
+  set.seed(10)
   res3 <- networkSoSD::spectral_clustering(agg_network, K = K, weighted = F)
   
   # try naive method of flattening
   flat_mat <- networkSoSD::flatten(dat$adj_list)
+  set.seed(10)
   res4 <- networkSoSD::spectral_clustering(flat_mat, K = K, weighted = F)
   
+  set.seed(10)
+  res5 <- lmfo(dat$adj_list, n = nrow(dat$adj_list[[1]]), k = K)
+  
+  set.seed(10)
+  reg_val <- max(sapply(dat$adj_list, function(x){4*max(abs(irlba::partial_eigen(x, n = min(K,5))$value))}))
+  tmp <- coreg(dat$adj_list, n = nrow(dat$adj_list[[1]]), k = K, beta = reg_val)
+  res6 <- tmp[[length(dat$adj_list)+1]]
+  
   list(res_ss_debias_F = res1, res_sum_F = res2, 
-       res_ss_F = res3, res_flat_F = res4)
+       res_ss_F = res3, res_flat_F = res4,
+       chen_linked = res5, chen_coreg = res6)
 }
 
 ## i <- 9; y <- 1; set.seed(y); zz <- criterion(rule(paramMat[i,]), paramMat[i,], y); zz
@@ -62,10 +76,11 @@ criterion <- function(dat, vec, y){
 #########################
 
 
-res <- simulation::simulation_generator(rule = rule, criterion = criterion,
-                                        paramMat = paramMat, trials = trials,
-                                        cores = ncores, as_list = T,
-                                        filepath = "../results/simulation_rho_simple_tmp.RData",
-                                        verbose = T)
+res <- customSimulator::simulator(rule = rule, criterion = criterion,
+                                  paramMat = paramMat, trials = trials,
+                                  cores = ncores,
+                                  filepath = "../results/simulation_rho_simple_tmp.RData",
+                                  required_packages = "networkSoSD",
+                                  verbose = T)
 
 save.image(paste0("../results/simulation_rho_simple", run_suffix, ".RData"))
