@@ -1,5 +1,5 @@
 rm(list=ls())
-library(simulation)
+library(customSimulator)
 library(networkSoSD)
 
 session_info <- devtools::session_info()
@@ -18,7 +18,6 @@ K <- ncol(B1)
 
 trials <- 100
 ncores <- 10
-doMC::registerDoMC(cores = ncores)
 
 ###############################
 
@@ -62,8 +61,9 @@ criterion <- function(dat, vec, y){
   res5 <- lmfo(dat$adj_list, n = nrow(dat$adj_list[[1]]), k = K)
   
   set.seed(10)
-  reg_val <- max(sapply(dat$adj_list, function(x){4*max(abs(irlba::partial_eigen(x, n = min(K,5))$value))}))
-  tmp <- coreg(dat$adj_list, n = nrow(dat$adj_list[[1]]), k = K, beta = reg_val)
+  reg_val <- max(sapply(dat$adj_list, function(x){4*max(abs(irlba::partial_eigen(x, n = min(K,5))$values))}))
+  tmp <- coreg(dat$adj_list, n = nrow(dat$adj_list[[1]]), k = K, beta = reg_val,
+               verbose = F, max_iter = 50)
   res6 <- tmp[[length(dat$adj_list)+1]]
   
   list(res_ss_debias_F = res1, res_sum_F = res2, 
@@ -71,7 +71,7 @@ criterion <- function(dat, vec, y){
        chen_linked = res5, chen_coreg = res6)
 }
 
-## i <- 9; y <- 1; set.seed(y); zz <- criterion(rule(paramMat[i,]), paramMat[i,], y); zz
+## i <- 1; y <- 1; set.seed(y); zz <- criterion(rule(paramMat[i,]), paramMat[i,], y); zz
 
 #########################
 
@@ -80,7 +80,7 @@ res <- customSimulator::simulator(rule = rule, criterion = criterion,
                                   paramMat = paramMat, trials = trials,
                                   cores = ncores,
                                   filepath = "../results/simulation_rho_simple_tmp.RData",
-                                  required_packages = "networkSoSD",
+                                  required_packages = c("networkSoSD", "irlba", "clue", "stats", "Matrix"),
                                   verbose = T)
 
 save.image(paste0("../results/simulation_rho_simple", run_suffix, ".RData"))

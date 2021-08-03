@@ -47,7 +47,7 @@ pMatrix.min <- function(A, B) {
       D[j, i] <- (sum((B[j,] - A[i,]) ^ 2))
     }
   }
-  vec <- c(solve_LSAP(D))
+  vec <- c(clue::solve_LSAP(D))
   list(A = A[vec, ], pvec = vec)
 }
 
@@ -77,7 +77,7 @@ dcspectral <- function(x, n, k)
   d = d + mean(d)
   deg <- diag(1 / sqrt(d))
   l = deg %*% x %*% deg
-  spectra <- eigen(l)
+  spectra <- RSpectra::eigs_sym(l, k = k)
   specmat <- spectra$vectors[, 1:k]
   rownorm <- apply(specmat, 1, function(a) {
     (sum(a ^ 2)) ^ 0.5
@@ -117,7 +117,7 @@ coregfunction <- function(laplist, snrlist, ulist, ustar) {
   M = length(laplist)
   objlist <- lapply(1:M, function(m) {
     specobj <- tr(t(ulist[[m]]) %*% laplist[[m]] %*% ulist[[m]])
-    regterm <- (norm(t(ulist[[m]]) %*% ustar, type = "F")) ^ 2
+    regterm <- (Matrix::norm(t(ulist[[m]]) %*% ustar, type = "F")) ^ 2
     return(specobj + snrlist[m] * regterm)
   })
   obj <- Reduce("+", objlist)
@@ -127,13 +127,13 @@ coregfunction <- function(laplist, snrlist, ulist, ustar) {
 
 # The main Coreg function. Inputs are the list of adjacency matrices x, number of nodes n, nunber of communities
 # k and regularization parameter beta.
-coreg <- function(x, n, k, beta)
+coreg <- function(x, n, k, beta, max_iter = 100, verbose = F)
 {
   M = length(x)
   laplist <- laplacian(x)
   snrlist <- rep(beta, M)
   ulist <- lapply(1:M, function(m) {
-    spectra <- eigen(laplist[[m]])
+    spectra <- RSpectra::eigs_sym(laplist[[m]], k = k)
     specmat <- spectra$vectors[, 1:k]
     return(specmat)
   })
@@ -141,17 +141,17 @@ coreg <- function(x, n, k, beta)
     return(snrlist[m] * ulist[[m]] %*% t(ulist[[m]]))
   })
   usum <- Reduce('+', usumlist)
-  ustareigen <- eigen(usum)
+  ustareigen <- RSpectra::eigs_sym(usum, k = k)
   ustar <- ustareigen$vectors[, 1:k]
   value <- coregfunction(laplist, snrlist, ulist, ustar)
   print(value)
   t = 0
   valdiff = 1
-  while ((valdiff > 1e-04) & (t < 100))
+  while ((valdiff > 1e-04) & (t < max_iter))
   {
     valuelast = value
     ulist <- lapply(1:M, function(m) {
-      um <- eigen(laplist[[m]] + snrlist[m] * ustar %*% t(ustar))
+      um <- RSpectra::eigs_sym(laplist[[m]] + snrlist[m] * ustar %*% t(ustar), k = k)
       specmat <- um$vectors[, 1:k]
       return(specmat)
     })
@@ -160,23 +160,23 @@ coreg <- function(x, n, k, beta)
       return(snrlist[m] * ulist[[m]] %*% t(ulist[[m]]))
     })
     usum <- Reduce('+', usumlist)
-    ustareigen <- eigen(usum)
+    ustareigen <- RSpectra::eigs_sym(usum, k = k)
     ustar <- ustareigen$vectors[, 1:k]
     
     value = coregfunction(laplist, snrlist, ulist, ustar)
     valdiff = (value - valuelast)
     t = t + 1
-    print(value)
-    print(t)
+    if(verbose) print(value)
+    if(verbose) print(t)
   }
   specclus <- lapply(ulist, function(r) {
-    specu <- kmeans(r, k)
+    specu <- stats::kmeans(r, k)
     return(specu$cluster)
   })
-  specstar <- kmeans(ustar, k)
+  specstar <- stats::kmeans(ustar, k)
   specclus[[M + 1]] <- specstar$cluster
   specclus[[M + 2]] <- Reduce("+", lapply(1:M, function(m) {
-    y = solve_LSAP(table(specclus[[m]], specclus[[M + 1]]), maximum = TRUE)
+    y = clue::solve_LSAP(table(specclus[[m]], specclus[[M + 1]]), maximum = TRUE)
     for (i in 1:n) {
       specclus[[m]][i] <- y[specclus[[m]][i]]
     }
@@ -194,9 +194,9 @@ meancluster <- function(x, n, k)
 {
   laplist <- laplacian(x)
   lapmean <- Reduce("+", laplist)
-  spectra <- eigen(lapmean)
+  spectra <- RSpectra::eigs_sym(lapmean, k = k)
   umean <- spectra$vectors[, 1:k]
-  specmean <- kmeans(umean, k)
+  specmean <- stats::kmeans(umean, k)
   return(specmean$cluster)
 }
 
@@ -206,7 +206,7 @@ speck <- function(x, n, k) {
   M = length(x)
   laplist <- laplacian(x)
   ulist <- lapply(1:M, function(m) {
-    spectra <- eigen(laplist[[m]])
+    spectra <- RSpectra::eigs_sym(laplist[[m]], k = k)
     specmat <- spectra$vectors[, 1:k]
     return(specmat)
   })
@@ -214,7 +214,7 @@ speck <- function(x, n, k) {
     return(ulist[[m]] %*% t(ulist[[m]]))
   })
   usum <- Reduce('+', usumlist)
-  ustareigen <- eigen(usum)
+  ustareigen <- RSpectra::eigs_sym(usum, k = k)
   ustar <- ustareigen$vectors[, 1:k]
   specmean <- kmeans(ustar, k)
   return(specmean$cluster)
@@ -234,7 +234,7 @@ meanadj <- function(x, n, k)
   d = d + mean(d)
   deg <- diag(1 / sqrt(d))
   lap = deg %*% adjsum %*% deg
-  spectra <- eigen(adjsum)
+  spectra <- RSpectra::eigs_sym(adjsum, k = k)
   umean <- spectra$vectors[, 1:k]
   specmean <- kmeans(umean, k)
   return(specmean$cluster)
@@ -296,14 +296,14 @@ lmfo <- function(x, n, k) {
   laplist <- laplacian(x)
   # Initialize with mean laplacian
   lapmean <- Reduce("+", laplist)
-  spectra <- eigen(lapmean)
+  spectra <- RSpectra::eigs_sym(lapmean, k = k)
   ustar <- spectra$vectors[, 1:k]
   lambda <- lapply(1:M, function(m) {
     return(diag(spectra$values[1:k]))
   })
   param <- c(as.vector(ustar), as.vector(unlist(lambda)))
   optimized <-
-    optim(
+    stats::optim(
       par = param,
       fn = lmffunctiono,
       gr = lmfdero,
@@ -321,7 +321,7 @@ lmfo <- function(x, n, k) {
       return(matrix(param[(n * k + (m - 1) * k ^ 2 + 1):(n * k + m * k ^ 2)], k, k))
     })
   
-  specstar <- kmeans(ustar, k)
+  specstar <- stats::kmeans(ustar, k)
   specclus <- specstar$cluster
   return(specclus)
   
@@ -468,7 +468,7 @@ conmf <- function(x, n, k, alpha)
   nmfstar <- apply(ustar, 1, which.max)
   nmfclus[[M + 1]] <- nmfstar
   nmfclus[[M + 2]] <- Reduce("+", lapply(1:M, function(m) {
-    y = solve_LSAP(table(nmfclus[[m]], nmfclus[[M + 1]]), maximum = TRUE)
+    y = clue::solve_LSAP(table(nmfclus[[m]], nmfclus[[M + 1]]), maximum = TRUE)
     for (i in 1:n) {
       nmfclus[[m]][i] <- y[nmfclus[[m]][i]]
     }
