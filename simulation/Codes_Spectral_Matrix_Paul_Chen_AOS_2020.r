@@ -144,7 +144,7 @@ coreg <- function(x, n, k, beta, max_iter = 100, verbose = F)
   ustareigen <- RSpectra::eigs_sym(usum, k = k)
   ustar <- ustareigen$vectors[, 1:k]
   value <- coregfunction(laplist, snrlist, ulist, ustar)
-  print(value)
+  if(verbose) print(value)
   t = 0
   valdiff = 1
   while ((valdiff > 1e-04) & (t < max_iter))
