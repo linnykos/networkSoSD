@@ -8,22 +8,23 @@ source("../simulation/Codes_Spectral_Matrix_Paul_Chen_AOS_2020.r")
 source_code_info <- readLines("../simulation/simulation_rho_simple.R")
 run_suffix <- ""
 
-paramMat <- cbind(200, 30, seq(0.02, 0.06, length.out = 9), 0.5, 0.5)
-colnames(paramMat) <- c("n", "L", "rho", "mem_prop1", "mem_prop2")
+df_param <- cbind(200, 30, seq(0.02, 0.06, length.out = 9), 0.5, 0.5)
+colnames(df_param) <- c("n", "L", "rho", "mem_prop1", "mem_prop2")
+df_param <- as.data.frame(df_param)
 
 .l2norm <- function(x){sqrt(sum(x^2))}
 B1 <- matrix(c(3/4, sqrt(3)/8, sqrt(3)/8, 1/2), 2, 2)
 B2 <- matrix(c(7/8, 3*sqrt(3)/8, 3*sqrt(3)/8, 1/8), 2, 2)
 K <- ncol(B1)
 
-trials <- 100
-ncores <- 10
+ntrials <- 100
+ncores <- 1
 
 ###############################
 
 rule <- function(vec){
-  n <- vec["n"]; L <- vec["L"]; rho <- vec["rho"]
-  mem_prop1 <- vec["mem_prop1"]; mem_prop2 <- vec["mem_prop2"]
+  n <- as.numeric(vec["n"]); L <- as.numeric(vec["L"]); rho <- as.numeric(vec["rho"])
+  mem_prop1 <- as.numeric(vec["mem_prop1"]); mem_prop2 <- as.numeric(vec["mem_prop2"])
   
   membership_vec <- c(rep(1, mem_prop1*n), rep(2, mem_prop2*n))
   if(length(membership_vec) < n) membership_vec <- c(membership_vec, rep(2, n-length(membership_vec)))
@@ -57,11 +58,12 @@ criterion <- function(dat, vec, y){
   set.seed(10)
   res4 <- networkSoSD::spectral_clustering(flat_mat, K = K, weighted = F)
   
+  # yuguo's methods
   set.seed(10)
   res5 <- lmfo(dat$adj_list, n = nrow(dat$adj_list[[1]]), k = K)
   
   set.seed(10)
-  reg_val <- max(sapply(dat$adj_list, function(x){4*max(abs(irlba::partial_eigen(x, n = min(K,5))$values))}))
+  reg_val <- max(sapply(dat$adj_list, function(x){4*max(abs(RSpectra::eigs_sym(x, k = min(K,5))$values))}))
   tmp <- coreg(dat$adj_list, n = nrow(dat$adj_list[[1]]), k = K, beta = reg_val,
                verbose = F, max_iter = 50)
   res6 <- tmp[[length(dat$adj_list)+1]]
@@ -71,13 +73,13 @@ criterion <- function(dat, vec, y){
        chen_linked = res5, chen_coreg = res6)
 }
 
-## i <- 1; y <- 1; set.seed(y); zz <- criterion(rule(paramMat[i,]), paramMat[i,], y); zz
+## i <- 1; y <- 1; set.seed(y); zz <- criterion(rule(df_param[i,]), df_param[i,], y); zz
 
 #########################
 
 
 res <- customSimulator::simulator(rule = rule, criterion = criterion,
-                                  paramMat = paramMat, trials = trials,
+                                  df_param = df_param, ntrials = ntrials,
                                   cores = ncores,
                                   filepath = "../results/simulation_rho_simple_tmp.RData",
                                   required_packages = c("networkSoSD", "irlba", "clue", "stats", "Matrix"),

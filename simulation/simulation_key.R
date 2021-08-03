@@ -13,25 +13,25 @@ color_name_vec <- c("yellow", "skyblue", "green", "blue", "orange", "gray", "red
 color_vec <- color_func(1)
 
 
-plot_func <- function(methods, res_mat, key_mat, paramMat, main, y_seq = seq(0, 1,length.out = 11),
+plot_func <- function(methods, res_mat, key_mat, df_param, main, y_seq = seq(0, 1,length.out = 11),
                       legend_cex = 1, legend_loc = 'bottomright'){
   idx_vec <- sapply(methods, function(x){which(key_mat$method == x)})
   idx_vec2 <- sapply(methods, function(x){which(rownames(res_mat) == x)}) 
   stopifnot(length(idx_vec) == length(idx_vec2))
   
-  plot(NA, xlim = range(paramMat[,"rho"]), ylim = range(res_mat), xlab = expression(paste("Sparisity (", rho, ")")),
+  plot(NA, xlim = range(as.numeric(df_param[,"rho"])), ylim = range(res_mat), xlab = expression(paste("Sparisity (", rho, ")")),
        ylab = "% mis-clustered nodes\n(Averaged over 100 trials)", main = main)
   # draw grid
-  for(x in paramMat[seq(1, nrow(paramMat), by = 2), "rho"]){
+  for(x in as.numeric(df_param[seq(1, nrow(df_param), by = 2), "rho"])){
     lines(rep(x,2), c(-1e4,1e4), col = "gray", lwd = 0.5, lty = 2)
   }
   for(y in y_seq){
     lines(c(-1e4,1e4), rep(y,2), col = "gray", lwd = 0.5, lty = 2)
   }
   for(i in 1:length(idx_vec)){
-    graphics::lines(x = paramMat[,"rho"], y = res_mat[idx_vec2[i],], col = key_mat$color[idx_vec[i]], 
+    graphics::lines(x = as.numeric(df_param[,"rho"]), y = res_mat[idx_vec2[i],], col = key_mat$color[idx_vec[i]], 
                     lwd = 2, lty = key_mat$lty[idx_vec[i]])
-    graphics::points(x = paramMat[,"rho"], y = res_mat[idx_vec2[i],], col = key_mat$color[idx_vec[i]],  
+    graphics::points(x = as.numeric(df_param[,"rho"]), y = res_mat[idx_vec2[i],], col = key_mat$color[idx_vec[i]],  
                      pch = key_mat$pch[idx_vec[i]], cex = 1)
   }
   

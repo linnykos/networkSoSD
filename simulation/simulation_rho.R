@@ -1,34 +1,36 @@
 rm(list=ls())
-library(simulation)
+library(customSimulator)
 library(networkSoSD)
 
-session_info <- sessionInfo()
+session_info <- devtools::session_info()
 date_of_run <- Sys.time()
+source("../simulation/Codes_Spectral_Matrix_Paul_Chen_AOS_2020.r")
 source_code_info <- readLines("../simulation/simulation_rho.R")
-run_suffix <- "_writeup4"
+run_suffix <- ""
 
-paramMat <- cbind(500, 100, seq(0.025, 0.2, length.out = 15), 0.4, 0.1, 0.5)
-colnames(paramMat) <- c("n", "L", "rho", "mem_prop1", "mem_prop2", "mem_prop3")
+df_param <- cbind(3, 500, 100, seq(0.025, 0.2, length.out = 15), 0.4, 0.1, 0.5)
+colnames(df_param) <- c("K", "n", "L", "rho", "mem_prop1", "mem_prop2", "mem_prop3")
+df_param <- as.data.frame(df_param)
 
-.l2norm <- function(x){sqrt(sum(x^2))}
-vec1 <- c(1,1,sqrt(2))
-vec2 <- c(1,1,-sqrt(2))
-vec3 <- c(-1,1,0)
-eigen_mat <- cbind(vec1/.l2norm(vec1), vec2/.l2norm(vec2), vec3/.l2norm(vec3))
-B1 <- eigen_mat %*% diag(c(1.5, 0.2, 0.4)) %*% t(eigen_mat)
-B2 <- eigen_mat %*% diag(c(1.5, 0.2, -0.4)) %*% t(eigen_mat)
-K <- 3
-
-trials <- 50
-ncores <- 10
-doMC::registerDoMC(cores = ncores)
+ntrials <- 50
+ncores <- 4
 rm(list = c("vec1", "vec2", "vec3", "eigen_mat"))
 
 ###############################
 
 rule <- function(vec){
-  n <- vec["n"]; L <- vec["L"]; rho <- vec["rho"]
-  mem_prop1 <- vec["mem_prop1"]; mem_prop2 <- vec["mem_prop2"]; mem_prop3 <- vec["mem_prop3"]
+  .l2norm <- function(x){sqrt(sum(x^2))}
+  vec1 <- c(1,1,sqrt(2))
+  vec2 <- c(1,1,-sqrt(2))
+  vec3 <- c(-1,1,0)
+  eigen_mat <- cbind(vec1/.l2norm(vec1), vec2/.l2norm(vec2), vec3/.l2norm(vec3))
+  B1 <- eigen_mat %*% diag(c(1.5, 0.2, 0.4)) %*% t(eigen_mat)
+  B2 <- eigen_mat %*% diag(c(1.5, 0.2, -0.4)) %*% t(eigen_mat)
+
+  n <- as.numeric(vec["n"]); L <- as.numeric(vec["L"]); rho <- as.numeric(vec["rho"])
+  K <- as.numeric(vec["K"])
+  mem_prop1 <- as.numeric(vec["mem_prop1"]); mem_prop2 <- as.numeric(vec["mem_prop2"])
+  mem_prop3 <- as.numeric(vec["mem_prop3"])
   
   membership_vec <- c(rep(1, mem_prop1*n), rep(2, mem_prop2*n), rep(3, mem_prop3*n))
   if(length(membership_vec) < n) membership_vec <- c(membership_vec, rep(3, n-length(membership_vec)))
@@ -75,24 +77,35 @@ criterion <- function(dat, vec, y){
   res4b <- networkSoSD::spectral_clustering(flat_mat, K = K, weighted = T)
   
   ### now the greedy method
-  res5 <- networkSoSD::greedy_clustering(dat$adj_list, K = K)$cluster
+  res5 <- networkSoSD::greedy_refinement(dat$adj_list, K = K)$cluster
+  
+  # yuguo's methods
+  set.seed(10)
+  res6 <- lmfo(dat$adj_list, n = nrow(dat$adj_list[[1]]), k = K)
+  
+  set.seed(10)
+  reg_val <- max(sapply(dat$adj_list, function(x){4*max(abs(RSpectra::eigs_sym(x, k = min(K,5))$values))}))
+  tmp <- coreg(dat$adj_list, n = nrow(dat$adj_list[[1]]), k = K, beta = reg_val,
+               verbose = F, max_iter = 50)
+  res7 <- tmp[[length(dat$adj_list)+1]]
   
   list(res_ss_debias_F = res1, res_ss_debias_T = res1b, 
        res_sum_F = res2, res_sum_T = res2b, 
        res_ss_F = res3, res_ss_T = res3b,
        res_flat_F = res4, res_flat_T = res4b,
-       res_greedy = res5)
+       res_greedy = res5, chen_linked = res6, chen_coreg = res7)
 }
 
-## i <- 1; y <- 1; set.seed(y); zz <- criterion(rule(paramMat[i,]), paramMat[i,], y); zz
+## i <- 1; y <- 1; set.seed(y); zz <- criterion(rule(df_param[i,]), df_param[i,], y); zz
 
 #########################
 
 
-res <- simulation::simulation_generator(rule = rule, criterion = criterion,
-                                        paramMat = paramMat, trials = trials,
-                                        cores = ncores, as_list = T,
-                                        filepath = "../results/simulation_rho_tmp.RData",
-                                        verbose = T)
+res <- customSimulator::simulator(rule = rule, criterion = criterion,
+                                  df_param = df_param, ntrials = ntrials,
+                                  cores = ncores,
+                                  filepath = "../results/simulation_rho_tmp.RData",
+                                  required_packages = c("networkSoSD", "irlba", "clue", "stats", "Matrix"),
+                                  verbose = T)
 
 save.image(paste0("../results/simulation_rho", run_suffix, ".RData"))
