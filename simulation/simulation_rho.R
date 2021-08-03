@@ -14,7 +14,6 @@ df_param <- as.data.frame(df_param)
 
 ntrials <- 50
 ncores <- 4
-rm(list = c("vec1", "vec2", "vec3", "eigen_mat"))
 
 ###############################
 
@@ -45,6 +44,8 @@ rule <- function(vec){
 }
 
 criterion <- function(dat, vec, y){
+  K <- as.numeric(vec["K"])
+  
   agg_network <- networkSoSD::aggregate_networks(dat$adj_list, method = "ss_debias")
   res1 <- networkSoSD::spectral_clustering(agg_network, K = K, weighted = F)
   
