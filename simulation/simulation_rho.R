@@ -8,11 +8,13 @@ source("../simulation/Codes_Spectral_Matrix_Paul_Chen_AOS_2020.r")
 source_code_info <- readLines("../simulation/simulation_rho.R")
 run_suffix <- ""
 
-df_param <- cbind(3, 500, 100, seq(0.025, 0.2, length.out = 15), 0.4, 0.1, 0.5)
+# df_param <- cbind(3, 500, 100, seq(0.025, 0.2, length.out = 15), 0.4, 0.1, 0.5)
+df_param <- cbind(3, 500, 100, seq(0.025, 0.2, length.out = 2), 0.4, 0.1, 0.5)
 colnames(df_param) <- c("K", "n", "L", "rho", "mem_prop1", "mem_prop2", "mem_prop3")
 df_param <- as.data.frame(df_param)
 
-ntrials <- 50
+# ntrials <- 50
+ntrials <- 5
 ncores <- 4
 
 ###############################
