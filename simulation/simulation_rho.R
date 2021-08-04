@@ -17,7 +17,7 @@ ncores <- 4
 
 ###############################
 
-rule <- function(vec){
+generator <- function(vec, ...){
   .l2norm <- function(x){sqrt(sum(x^2))}
   vec1 <- c(1,1,sqrt(2))
   vec2 <- c(1,1,-sqrt(2))
@@ -43,7 +43,7 @@ rule <- function(vec){
   list(adj_list = adj_list)
 }
 
-criterion <- function(dat, vec, y){
+executor <- function(dat, vec, y, ...){
   K <- as.numeric(vec["K"])
   
   agg_network <- networkSoSD::aggregate_networks(dat$adj_list, method = "ss_debias")
@@ -102,11 +102,11 @@ criterion <- function(dat, vec, y){
 #########################
 
 
-res <- customSimulator::simulator(rule = rule, criterion = criterion,
+res <- customSimulator::simulator(generator = generator, executor = executor,
                                   df_param = df_param, ntrials = ntrials,
                                   cores = ncores,
                                   filepath = "../results/simulation_rho_tmp.RData",
-                                  required_packages = c("networkSoSD", "irlba", "clue", "stats", "Matrix"),
-                                  verbose = T)
+                                  required_packages = c("networkSoSD", "irlba", "clue", "stats", "Matrix", "RSpectra"),
+                                  verbose = T, lmfo, coreg)
 
 save.image(paste0("../results/simulation_rho", run_suffix, ".RData"))
