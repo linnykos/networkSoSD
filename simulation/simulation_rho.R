@@ -7,14 +7,13 @@ date_of_run <- Sys.time()
 source_code_info <- readLines("../simulation/simulation_rho.R")
 run_suffix <- ""
 
-# df_param <- cbind(3, 500, 100, seq(0.025, 0.2, length.out = 15), 0.4, 0.1, 0.5)
-df_param <- cbind(3, 30, 10, seq(0.025, 0.2, length.out = 2), 0.4, 0.1, 0.5)
+df_param <- cbind(3, 500, 100, seq(0.025, 0.2, length.out = 15), 0.4, 0.1, 0.5)
 colnames(df_param) <- c("K", "n", "L", "rho", "mem_prop1", "mem_prop2", "mem_prop3")
 df_param <- as.data.frame(df_param)
 
-# ntrials <- 50
-ntrials <- 5
-ncores <- 2
+ntrials <- 50
+ncores <- 4
+worker_variables <- NA
 
 ###############################
 
@@ -50,72 +49,72 @@ executor <- function(dat, vec, y, worker_variables){
   set.seed(10)
   agg_network <- networkSoSD::aggregate_networks(dat$adj_list, method = "ss_debias")
   res1 <- networkSoSD::spectral_clustering(agg_network, K = K, weighted = F)
-  
+   
   # try naive method of adding
   set.seed(10)
   agg_network <- networkSoSD::aggregate_networks(dat$adj_list, method = "sum")
   res2 <- networkSoSD::spectral_clustering(agg_network, K = K, weighted = F)
-  
+
   # try naive method of ss
   set.seed(10)
   agg_network <- networkSoSD::aggregate_networks(dat$adj_list, method = "ss")
   res3 <- networkSoSD::spectral_clustering(agg_network, K = K, weighted = F)
-  
+
   # try naive method of flattening
   set.seed(10)
   flat_mat <- networkSoSD::flatten(dat$adj_list)
   res4 <- networkSoSD::spectral_clustering(flat_mat, K = K, weighted = F)
-  
+
   ### now all the weighted versions
   set.seed(10)
   agg_network <- networkSoSD::aggregate_networks(dat$adj_list, method = "ss_debias")
   res1b <- networkSoSD::spectral_clustering(agg_network, K = K, weighted = T)
-  
+
   # try naive method of adding
   set.seed(10)
   agg_network <- networkSoSD::aggregate_networks(dat$adj_list, method = "sum")
   res2b <- networkSoSD::spectral_clustering(agg_network, K = K, weighted = T)
-  
+
   # try naive method of ss
   set.seed(10)
   agg_network <- networkSoSD::aggregate_networks(dat$adj_list, method = "ss")
   res3b <- networkSoSD::spectral_clustering(agg_network, K = K, weighted = T)
-  
+
   # try naive method of flattening
   set.seed(10)
   flat_mat <- networkSoSD::flatten(dat$adj_list)
   res4b <- networkSoSD::spectral_clustering(flat_mat, K = K, weighted = T)
-  
+
   ### now the greedy method
   set.seed(10)
   res5 <- networkSoSD::greedy_refinement(dat$adj_list, K = K)$cluster
-  
+
   # yuguo's methods
   set.seed(10)
-  res6 <- worker_variables$lmfo(dat$adj_list, n = nrow(dat$adj_list[[1]]), k = K)
-  # res5 <- mean(worker_variables$vec)
+  res6 <- networkSoSD::lmfo(dat$adj_list, k = K)
+  res5 <- mean(worker_variables$vec)
   
   # set.seed(10)
-  # reg_val <- max(sapply(dat$adj_list, function(x){4*max(abs(RSpectra::eigs_sym(x, k = min(K,5))$values))}))
-  # tmp <- worker_variables$coreg(dat$adj_list, n = nrow(dat$adj_list[[1]]), k = K, beta = reg_val,
-  #              verbose = F, max_iter = 50)
-  # res7 <- tmp[[length(dat$adj_list)+1]]
+  reg_val <- max(sapply(dat$adj_list, function(x){4*max(abs(RSpectra::eigs_sym(x, k = min(K,5))$values))}))
+  tmp <- worker_variables$coreg(dat$adj_list, k = K, beta = reg_val,
+               verbose = F, max_iter = 50)
+  res7 <- tmp[[length(dat$adj_list)+1]]
   
-  list(res_ss_debias_F = res1, res_ss_debias_T = res1b, 
-       res_sum_F = res2, res_sum_T = res2b, 
+  list(res_ss_debias_F = res1, res_ss_debias_T = res1b,
+       res_sum_F = res2, res_sum_T = res2b,
        res_ss_F = res3, res_ss_T = res3b,
        res_flat_F = res4, res_flat_T = res4b,
-       res_greedy = res5, chen_linked = res6) #, chen_coreg = res7)
+       res_greedy = res5, chen_linked = res6, chen_coreg = res7)
 }
 
-## i <- 1; y <- 1; set.seed(y); zz <- executor(generator(df_param[i,], worker_variables), df_param[i,], y, worker_variables); zz
+## i <- 2; y <- 5; set.seed(y); zz <- executor(generator(df_param[i,], worker_variables), df_param[i,], y, worker_variables); zz
 
 #########################
 
 
 res <- customSimulator::simulator(generator = generator, executor = executor,
                                   df_param = df_param, ntrials = ntrials,
-                                  cores = 2, 
+                                  cores = 1, 
                                   filepath = "../results/simulation_rho_tmp.RData",
                                   required_packages = "networkSoSD",
                                   verbose = F)

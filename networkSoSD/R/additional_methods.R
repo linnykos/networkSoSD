@@ -49,16 +49,16 @@ coreg <- function(x, k, beta, max_iter = 100, verbose = F)
   laplist <- laplacian(x)
   snrlist <- rep(beta, M)
   ulist <- lapply(1:M, function(m) {
-    spectra <- RSpectra::eigs_sym(laplist[[m]], k = k)
-    specmat <- spectra$vectors[, 1:k]
+    spectra <- .svd_truncated(laplist[[m]], K = k, symmetric = T)
+    specmat <- spectra$u[, 1:k]
     return(specmat)
   })
   usumlist <- lapply(1:M, function(m) {
     return(snrlist[m] * ulist[[m]] %*% t(ulist[[m]]))
   })
   usum <- Reduce('+', usumlist)
-  ustareigen <- RSpectra::eigs_sym(usum, k = k)
-  ustar <- ustareigen$vectors[, 1:k]
+  ustareigen <- .svd_truncated(usum, K = k, symmetric = T)
+  ustar <- ustareigen$u[, 1:k]
   value <- coregfunction(laplist, snrlist, ulist, ustar)
   if(verbose) print(value)
   t = 0
@@ -67,8 +67,8 @@ coreg <- function(x, k, beta, max_iter = 100, verbose = F)
   {
     valuelast = value
     ulist <- lapply(1:M, function(m) {
-      um <- RSpectra::eigs_sym(laplist[[m]] + snrlist[m] * ustar %*% t(ustar), k = k)
-      specmat <- um$vectors[, 1:k]
+      um <- .svd_truncated(laplist[[m]] + snrlist[m] * ustar %*% t(ustar), K = k, symmetric = T)
+      specmat <- um$u[, 1:k]
       return(specmat)
     })
     
@@ -76,8 +76,8 @@ coreg <- function(x, k, beta, max_iter = 100, verbose = F)
       return(snrlist[m] * ulist[[m]] %*% t(ulist[[m]]))
     })
     usum <- Reduce('+', usumlist)
-    ustareigen <- RSpectra::eigs_sym(usum, k = k)
-    ustar <- ustareigen$vectors[, 1:k]
+    ustareigen <- .svd_truncated(usum, K = k, symmetric = T)
+    ustar <- ustareigen$u[, 1:k]
     
     value = coregfunction(laplist, snrlist, ulist, ustar)
     valdiff = (value - valuelast)
@@ -165,10 +165,10 @@ lmfo <- function(x, k) {
   laplist <- laplacian(x)
   # Initialize with mean laplacian
   lapmean <- Reduce("+", laplist)
-  spectra <- RSpectra::eigs_sym(lapmean, k = k)
-  ustar <- spectra$vectors[, 1:k]
+  spectra <- .svd_truncated(lapmean, K = k, symmetric = T)
+  ustar <- spectra$u[, 1:k]
   lambda <- lapply(1:M, function(m) {
-    return(diag(spectra$values[1:k]))
+    return(diag(spectra$u[1:k]))
   })
   param <- c(as.vector(ustar), as.vector(unlist(lambda)))
   optimized <-
