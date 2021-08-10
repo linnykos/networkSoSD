@@ -40,7 +40,7 @@ generator <- function(vec, worker_variables){
   prob_list <- lapply(1:L, function(i){
     membership_vec2 <- sapply(1:n, function(j){
       idx <- stats::rbinom(1, size = 1, prob = switch_prob)
-      if(idx == 1) membership_vec[j] else sample(1:K, size = 1, prob = prob_vec)
+      if(idx == 0) membership_vec[j] else sample(1:K, size = 1, prob = prob_vec)
     })
     
     if(i <= L/2){
