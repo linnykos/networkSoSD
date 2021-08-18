@@ -1,5 +1,5 @@
 rm(list=ls()); set.seed(10)
-load("../results/main_analysis.RData")
+load("../results/main_analysis_revision.RData")
 library(clusterProfiler); library(igraph); library(org.Mmu.eg.db)
 
 color_func <- function(alpha = 0.2){
@@ -37,6 +37,7 @@ component_num <- sapply(adj_list, function(adj_mat){
   c(tmp$no, length(which(tmp$membership %in% idx))/nrow(adj_mat))
 })
 
+# determine how many clusters the naively-summed graph has
 tmp <- networkSoSD::aggregate_networks(adj_list, method = "sum", verbose = T)
 tmp[tmp != 0] <- 1
 g <- igraph::graph_from_adjacency_matrix(tmp, mode = "undirected")

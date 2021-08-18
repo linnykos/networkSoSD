@@ -15,14 +15,14 @@ aggregate_networks <- function(adj_list, method = "ss_debias",
   for(i in 1:len){
     if(verbose && i %% floor(len/10) == 0) cat('*')
     if(method == "sum"){
-      tmp[,,i] <- adj_list[[i]]
+      tmp[,,i] <- as.matrix(adj_list[[i]])
     } else if(method == "ss"){
-      tmp[,,i] <- crossprod(adj_list[[i]])
+      tmp[,,i] <- as.matrix(Matrix::crossprod(adj_list[[i]]))
     } else if(method == "ss_debias"){
-      tmp[,,i] <- crossprod(adj_list[[i]]); diag(tmp[,,i]) <- 0
+      tmp[,,i] <- as.matrix(Matrix::crossprod(adj_list[[i]])); diag(tmp[,,i]) <- 0
       # equivalent to: tmp[,,i] <- crossprod(adj_list[[i]]) - diag(colSums(adj_list[[i]])) 
     } else if(method == "ss_debias2"){
-      tmp[,,i] <- crossprod(adj_list[[i]]); diag(tmp[,,i]) <- 0; diag(tmp[,,i]) <- colSums(tmp[,,i])/n
+      tmp[,,i] <- as.matrix(Matrix::crossprod(adj_list[[i]])); diag(tmp[,,i]) <- 0; diag(tmp[,,i]) <- colSums(tmp[,,i])/n
     } else {
       stop("method not found")
     }

@@ -2,14 +2,14 @@ rm(list=ls()); set.seed(10)
 
 library(networkSoSD); library(org.Mmu.eg.db); library(RSpectra); library(irlba)
 
-load("../../pnas/pnas.RData")
+load("../../../data/bakken_pnas/pnas.RData")
 session_info <- devtools::session_info()
 date_of_run <- Sys.time()
 source_code_info <- readLines("../main/analysis.R")
-run_suffix <- ""
+run_suffix <- "_revision"
 
 # manage gene names
-gene_name <- read.csv("../../pnas/All_human_genes.txt", header = F)
+gene_name <- read.csv("../../../data/bakken_pnas/All_human_genes.txt", header = F)
 
 library(org.Mmu.eg.db)
 rhesus_all <- as.list(org.Mmu.eg.db::org.Mmu.egALIAS2EG)
@@ -32,9 +32,9 @@ gene_name <- gene_name[keep_idx,1]
 
 ##########################
 
-adj_list <- lapply(dat_list, function(dat_list){
-  adj_mat <- matrix(0, nrow = nrow(dat_list), ncol = ncol(dat_list))
-  adj_mat[which(dat_list >= 0.15)] <- 1
+adj_list <- lapply(dat_list, function(mat){
+  adj_mat <- matrix(0, nrow = nrow(mat), ncol = ncol(mat))
+  adj_mat[which(abs(mat) >= 0.15)] <- 1
   adj_mat[keep_idx, keep_idx]
 })
 
