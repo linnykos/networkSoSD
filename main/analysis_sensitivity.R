@@ -91,6 +91,23 @@ res_list <- sapply(1:nrow(df_param), function(x){
 })
 
 
+###########################
+
+load("../results/main_analysis_revision.RData")
+gene_vec <- gene_name2
+cluster1 <- clustering_res
+cluster2 <- sapply(gene_name2, function(x){
+  idx <- which(zz$gene_name2 == x)
+  if(length(idx) > 0){
+    zz$clustering_res[idx[1]]
+  } else {
+    NA
+  }
+})
+sum(is.na(cluster2))
+table(cluster1, cluster2)
+
+
 # vec <- unlist(lapply(dat_list, function(mat){
 #   tmp <- mat[keep_idx, keep_idx]
 #   tmp[upper.tri(tmp, diag = F)]

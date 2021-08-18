@@ -11,24 +11,28 @@ aggregate_networks <- function(adj_list, method = "ss_debias",
   stopifnot(length(unique(as.numeric(sapply(adj_list, dim)))) == 1)
   n <- nrow(adj_list[[1]]); len <- length(adj_list)
   
-  tmp <- array(0, dim = c(n, n, len))
+  sum_mat <- numeric(0)
   for(i in 1:len){
     if(verbose && i %% floor(len/10) == 0) cat('*')
     if(method == "sum"){
-      tmp[,,i] <- as.matrix(adj_list[[i]])
+      tmp <- adj_list[[i]]
     } else if(method == "ss"){
-      tmp[,,i] <- as.matrix(Matrix::crossprod(adj_list[[i]]))
+      tmp <- Matrix::crossprod(adj_list[[i]])
     } else if(method == "ss_debias"){
-      tmp[,,i] <- as.matrix(Matrix::crossprod(adj_list[[i]])); diag(tmp[,,i]) <- 0
+      tmp <- Matrix::crossprod(adj_list[[i]]); diag(tmp[,,i]) <- 0
       # equivalent to: tmp[,,i] <- crossprod(adj_list[[i]]) - diag(colSums(adj_list[[i]])) 
-    } else if(method == "ss_debias2"){
-      tmp[,,i] <- as.matrix(Matrix::crossprod(adj_list[[i]])); diag(tmp[,,i]) <- 0; diag(tmp[,,i]) <- colSums(tmp[,,i])/n
     } else {
       stop("method not found")
     }
+    
+    if(i == 1) {
+      sum_mat <- tmp
+    } else {
+      sum_mat <- sum_mat + tmp
+    }
   }
   
-  apply(tmp, c(1,2), sum)
+  as.matrix(sum_mat)
 }
 
 #' Spectral clustering
