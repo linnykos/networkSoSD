@@ -13,7 +13,8 @@ Imports:
     RSpectra,
     irlba,
     clue,
-    Matrix
+    Matrix,
+    kernlab
 Suggests:
     testthat
 RoxygenNote: 7.1.1

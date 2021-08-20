@@ -16,11 +16,8 @@ aggregate_networks <- function(adj_list, method = "ss_debias",
     if(verbose && i %% floor(len/10) == 0) cat('*')
     if(method == "sum"){
       tmp <- adj_list[[i]]
-    } else if(method == "ss"){
+    } else if(method %in% c("ss", "ss_debias")){
       tmp <- Matrix::crossprod(adj_list[[i]])
-    } else if(method == "ss_debias"){
-      tmp <- Matrix::crossprod(adj_list[[i]]); diag(tmp[,,i]) <- 0
-      # equivalent to: tmp[,,i] <- crossprod(adj_list[[i]]) - diag(colSums(adj_list[[i]])) 
     } else {
       stop("method not found")
     }
@@ -31,6 +28,8 @@ aggregate_networks <- function(adj_list, method = "ss_debias",
       sum_mat <- sum_mat + tmp
     }
   }
+  
+  if(method == "ss_debias") diag(sum_mat) <- 0
   
   as.matrix(sum_mat)
 }

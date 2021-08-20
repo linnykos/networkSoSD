@@ -6,7 +6,7 @@ load("../../../data/bakken_pnas/pnas.RData")
 session_info <- devtools::session_info()
 date_of_run <- Sys.time()
 source_code_info <- readLines("../main/analysis.R")
-run_suffix <- "_revision"
+run_suffix <- "_revision_sensitivity"
 
 # manage gene names
 gene_name <- read.csv("../../../data/bakken_pnas/All_human_genes.txt", header = F)
