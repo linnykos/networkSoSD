@@ -38,7 +38,6 @@ generator <- function(vec, worker_variables){
   if(length(membership_vec) < n) membership_vec <- c(membership_vec, rep(3, n-length(membership_vec)))
   transition <- networkSoSD::compute_markov_transition(stationary_vec, switch_prob)
   
-  prob_vec <- c(mem_prop1, mem_prop2, mem_prop3)
   prob_list <- lapply(1:L, function(i){
     membership_vec2 <- membership_vec
     for(k in 1:3){

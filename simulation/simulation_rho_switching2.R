@@ -30,18 +30,21 @@ generator <- function(vec, worker_variables){
   
   n <- as.numeric(vec["n"]); L <- as.numeric(vec["L"]); rho <- as.numeric(vec["rho"])
   K <- as.numeric(vec["K"]); switch_prob <- as.numeric(vec["switch_prob"])
-  mem_prop1 <- as.numeric(vec["mem_prop1"]); mem_prop2 <- as.numeric(vec["mem_prop2"])
-  mem_prop3 <- as.numeric(vec["mem_prop3"])
+  stationary_vec <- as.numeric(c(vec["mem_prop1"], vec["mem_prop2"], vec["mem_prop3"]))
+  mem_prop1 <- stationary_vec[1]; mem_prop2 <- stationary_vec[2]
+  mem_prop3 <- stationary_vec[3]
   
   membership_vec <- c(rep(1, mem_prop1*n), rep(2, mem_prop2*n), rep(3, mem_prop3*n))
   if(length(membership_vec) < n) membership_vec <- c(membership_vec, rep(3, n-length(membership_vec)))
+  transition <- networkSoSD::compute_markov_transition(stationary_vec, switch_prob)
   
-  prob_vec <- c(mem_prop1, mem_prop2, mem_prop3)
   prob_list <- lapply(1:L, function(i){
-    membership_vec2 <- sapply(1:n, function(j){
-      idx <- stats::rbinom(1, size = 1, prob = switch_prob)
-      if(idx == 0) membership_vec[j] else sample(1:K, size = 1, prob = prob_vec)
-    })
+    membership_vec2 <- membership_vec
+    for(k in 1:3){
+      idx <- which(membership_vec == k)
+      membership_vec2[idx] <- sample(c(1:3), size = length(idx), 
+                                     replace = T, prob = transition[k,])
+    }
     
     if(i <= L/2){
       networkSoSD::compute_prob_mat(rho*B1, membership_vec2)
