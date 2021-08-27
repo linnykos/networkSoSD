@@ -5,8 +5,7 @@ library(networkSoSD); library(org.Mmu.eg.db); library(RSpectra); library(irlba)
 load("../../../data/bakken_pnas/pnas.RData")
 session_info <- devtools::session_info()
 date_of_run <- Sys.time()
-source_code_info <- readLines("../main/analysis.R")
-run_suffix <- "_revision_sensitivity"
+source_code_info <- readLines("../main/analysis_sensitivity.R")
 
 # manage gene names
 gene_name <- read.csv("../../../data/bakken_pnas/All_human_genes.txt", header = F)
@@ -90,30 +89,4 @@ res_list <- sapply(1:nrow(df_param), function(x){
                     num_clusters = as.numeric(df_param$num_clusters[x]))
 })
 
-
-###########################
-
-load("../results/main_analysis_revision.RData")
-gene_vec <- gene_name2
-cluster1 <- clustering_res
-cluster2 <- sapply(gene_name2, function(x){
-  idx <- which(zz$gene_name2 == x)
-  if(length(idx) > 0){
-    zz$clustering_res[idx[1]]
-  } else {
-    NA
-  }
-})
-sum(is.na(cluster2))
-table(cluster1, cluster2)
-
-
-# vec <- unlist(lapply(dat_list, function(mat){
-#   tmp <- mat[keep_idx, keep_idx]
-#   tmp[upper.tri(tmp, diag = F)]
-# }))
-# vec2 <- vec[sample(1:length(vec), 1e6)]
-# quantile(abs(vec2))
-# length(which(vec2 > 0.15))/length(vec2)
-# length(which(vec2 > 0.1))/length(vec2)
-# length(which(vec2 > 0.2))/length(vec2)
+save.image("../results/analysis_sensitivity.RData")
