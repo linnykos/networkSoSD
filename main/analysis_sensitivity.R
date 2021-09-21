@@ -80,8 +80,8 @@ analysis_function <- function(dat_list,
 df_param <- expand.grid(c(0.1, 0.15, 0.2), c(7:9))
 colnames(df_param) <- c("cor_threshold", "num_clusters")
 
-res_list <- sapply(1:nrow(df_param), function(x){
-  print('*')
+res_list <- lapply(1:nrow(df_param), function(x){
+  print(paste0("On row ", x))
   set.seed(10)
   analysis_function(dat_list, keep_idx = keep_idx, 
                     cor_threshold = as.numeric(df_param$cor_threshold[x]), 
@@ -89,4 +89,7 @@ res_list <- sapply(1:nrow(df_param), function(x){
                     num_clusters = as.numeric(df_param$num_clusters[x]))
 })
 
-save.image("../results/analysis_sensitivity.RData")
+save(dat_list, session_info, date_of_run, source_code_info,
+     keep_idx, entrez_id, gene_name,
+     df_param, res_list,
+     file = "../results/analysis_sensitivity.RData")
