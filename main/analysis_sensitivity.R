@@ -77,13 +77,17 @@ analysis_function <- function(dat_list,
 
 ##############################
 
-df_param <- expand.grid(c(0.1, 0.15, 0.2), c(7:9))
+# we choose these values since 0.15^(1/6) = 0.72
+# so we try 0.65 and 0.8, which correspond to 0.65^6 = 0.08
+# and 0.8^6 = 0.26
+df_param <- expand.grid(c(0.08, 0.15, 0.26), c(7:9))
 colnames(df_param) <- c("cor_threshold", "num_clusters")
 
 res_list <- lapply(1:nrow(df_param), function(x){
   print(paste0("On row ", x))
   set.seed(10)
-  analysis_function(dat_list, keep_idx = keep_idx, 
+  analysis_function(dat_list, 
+                    keep_idx = keep_idx, 
                     cor_threshold = as.numeric(df_param$cor_threshold[x]), 
                     degree_threshold = 90,
                     num_clusters = as.numeric(df_param$num_clusters[x]))

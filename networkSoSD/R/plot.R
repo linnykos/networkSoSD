@@ -2,12 +2,14 @@ plot_table <- function(cluster_vec1, cluster_vec2,
                        main, 
                        row_offset = 0,
                        col_offset = 0,
+                       col_xshift = 0,
                        normalize_row = T,
                        row_names = paste0("C", sort(unique(cluster_vec1))),
                        col_names = paste0("C", sort(unique(cluster_vec2))),
                        asp = length(unique(cluster_vec1))/length(unique(cluster_vec2)),
                        base_color = grDevices::rgb(0.803, 0.156, 0.211),
                        sig_digs = 2,
+                       cex_text = 1,
                        ...){
   stopifnot(length(cluster_vec1) == length(cluster_vec2))
   
@@ -41,9 +43,10 @@ plot_table <- function(cluster_vec1, cluster_vec2,
                  labels = rev(row_names), 
                  xpd = TRUE,
                  cex = 0.9)
-  graphics::text(seq(0, 1, length.out = p2), 
+  graphics::text(seq(0, 1, length.out = p2) + col_xshift, 
                  par("usr")[1] + col_offset, 
                  labels = col_names, 
+                 srt = -45,
                  xpd = TRUE,
                  cex = 0.9)
   
@@ -51,7 +54,9 @@ plot_table <- function(cluster_vec1, cluster_vec2,
   y_vec <- seq(0, 1, length.out = p1)
   for(i in 1:length(x_vec)){
     for(j in 1:length(y_vec)){
-      graphics::text(x_vec[i], 1-y_vec[j], label = round(tab[j,i], sig_digs))
+      graphics::text(x_vec[i], 1-y_vec[j], 
+                     label = round(tab[j,i], sig_digs),
+                     cex = cex_text)
     }
   }
   

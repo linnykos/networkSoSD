@@ -132,50 +132,6 @@ for(i in 1:length(adj_list)){
   graphics.off()
 }
 
-# gene_idx <- unlist(lapply(1:K, function(x){which(clustering_res2 == x)}))
-# clockwise90 <- function(a) { t(a[nrow(a):1,]) } 
-# png(paste0("../figures/Writeup4_pnas_adj_all.png"), height = 3000, width = 3000, units = "px", res = 300)
-# image(clockwise90(total_network[gene_idx, gene_idx]), main = "All", 
-#       col = hcl.colors(12, "Cividis"))
-# for(j in 1:(K-1)){
-#   len <- length(which(clustering_res2 <= j))/length(clustering_res2)
-#   lines(c(-1e4,1e4), rep(1-len,2), lwd = 2, lty = 2)
-#   lines(rep(len,2), c(-1e4,1e4), lwd = 2, lty = 2)
-# }
-# graphics.off()
-
-# tmp <- networkSoSD::aggregate_networks(adj_list, method = 'sum')
-# gene_idx <- unlist(lapply(1:K, function(x){which(clustering_res2 == x)}))
-# tmp <- tmp[gene_idx, gene_idx]
-# diag(tmp) <- -1
-# clockwise90 <- function(a) { t(a[nrow(a):1,]) } 
-# png(paste0("../figures/pnas_adj_all.png"), height = 3000, width = 3000, units = "px", res = 300)
-# image(clockwise90(tmp), main = "All", 
-#       col = c("white", hcl.colors(2, "Cividis")),
-#       breaks = c(-1.5, -.5, .5, 1.5))
-# for(j in 1:(K-1)){
-#   len <- length(which(clustering_res2 <= j))/length(clustering_res2)
-#   lines(c(-1e4,1e4), rep(1-len,2), lwd = 2, lty = 2, col = 'white')
-#   lines(rep(len,2), c(-1e4,1e4), lwd = 2, lty = 2, col = 'white')
-# }
-# graphics.off()
-# 
-# tmp_svd <- networkSoSD:::.svd_truncated(tmp, K = K)
-# set.seed(10)
-# umap_embedding3 <- Seurat::RunUMAP(networkSoSD:::.mult_mat_vec(tmp_svd$u, tmp_svd$d), verbose = F)@cell.embeddings
-# col_umap <- color_vec[c(9,2:8)][clustering_res2]
-# 
-# png(paste0("../figures/Writeup4_umap3.png"), height = 1500, width = 1500, units = "px", res = 300)
-# plot(NA, xlim = range(umap_embedding3[,1]), ylim = range(umap_embedding3[,2]),
-#      xlab = "UMAP dimension 1", ylab = "UMAP dimension 2",
-#      main = "UMAP of spectral embedding", asp = T)
-# idx <- which(clustering_res2 == 8)
-# points(umap_embedding3[idx,1], umap_embedding3[idx,2], pch = 16, col = col_umap[idx])
-# points(umap_embedding3[-idx,1], umap_embedding3[-idx,2], pch = 16, col = col_umap[-idx])
-# graphics.off()
-
-###################
-
 ego_list <- vector("list", length = K)
 for(i in 1:K){
   set.seed(10)
@@ -205,27 +161,41 @@ ego_summary
 # # http://supfam.org/SUPERFAMILY/cgi-bin/go.cgi
 # # https://www.biostars.org/p/237816/
 
+###################
 
-###########################################
+convert_synonyms <- function(vec){
+  stopifnot(is.character(vec))
+  len <- length(vec)
+  
+  dbCon <- org.Hs.eg.db::org.Hs.eg_dbconn()
+  sqlQuery <- 'SELECT * FROM alias, gene_info WHERE alias._id == gene_info._id;'
+  aliasSymbol <- DBI::dbGetQuery(dbCon, sqlQuery)
+  
+  syn_vec <- sapply(1:len, function(i){
+    bool <- any(c(vec[i] %in% aliasSymbol$alias_symbol, vec[i] %in% aliasSymbol$symbol))
+    if(!bool | vec[i] %in% aliasSymbol$symbol) return(vec[i])
+    
+    idx <- which(aliasSymbol$alias_symbol %in% vec[i])[1]
+    aliasSymbol$symbol[idx]
+  })
+  
+  names(syn_vec) <- NULL
+  syn_vec
+}
 
-# # analyze the connectivity
-# connectivity_list <- lapply(1:length(adj_list), function(x){
-#   mat <- matrix(0, K, K)
-#   for(i in 1:K){
-#     for(j in 1:i){
-#       idx1 <- which(clustering_res == i)
-#       idx2 <- which(clustering_res == j)
-#       mat[i,j] <- mean(adj_list[[x]][idx1,idx2])
-#       mat[j,i] <- mat[i,j]
-#     }
-#   }
-#   
-#   mat
-# })
-# 
-# lapply(connectivity_list, function(x){round(x, 2)})
-# 
-# lapply(connectivity_list, function(x){
-#   eigen(x)$values
-# })
-
+housekeeping <- read.csv("../../../data/bakken_pnas/housekeeping_genes.csv",
+                         header = F)
+housekeeping <- housekeeping[,1]
+housekeeping <- convert_synonyms(housekeeping)
+length(housekeeping)
+gene_name2b <- convert_synonyms(gene_name2)
+housekeeping <- housekeeping[housekeeping %in% gene_name2b]
+length(housekeeping)
+for(i in 1:max(clustering_res)){
+  idx <- which(clustering_res == i)
+  gene_vec <- gene_name2b[idx]
+  
+  print(i)
+  print(paste0("Size: ", length(idx)))
+  print(paste0("Housekeeping: ", length(intersect(gene_vec, housekeeping))))
+}

@@ -47,7 +47,8 @@ methods <- c( "res_sum_F", "res_ss_F", "res_ss_debias_F", "res_flat_F",
 plot_func(methods, res_mat, key_mat, df_param, 
           x_var = "switch_prob", xlab = "Flipping probability",
           main = "Comparison against aggregation\nmethods (Three communites, Flipping)",
-          y_seq = seq(0, 0.5, length.out = 11), legend_cex = 0.4, legend_loc = "bottomright")
+          y_seq = seq(0, 0.5, length.out = 11), 
+          legend_cex = 0.55, legend_loc = "bottomright")
 graphics.off()
 
 png("../figures/simulation_rho_weighted_switching.png", height = 1200, width = 1500, units = "px", res = 300)
@@ -56,7 +57,8 @@ methods <- c( "res_sum_T", "res_ss_T", "res_ss_debias_T", "res_flat_T")
 plot_func(methods, res_mat, key_mat, df_param, 
           x_var = "switch_prob", xlab = "Flipping probability",
           main = "Comparison against aggregation\nmethods (Weighted, Three communites, Flipping)",
-          y_seq = seq(0, 0.4, length.out = 9), legend_cex = 0.55, legend_loc = "bottomright")
+          y_seq = seq(0, 0.4, length.out = 9), 
+          legend_cex = 0.55, legend_loc = "bottomright")
 graphics.off()
 
 # png("../figures/simulation_rho.png", height = 1000, width = 2500, units = "px", res = 300)

@@ -17,6 +17,7 @@ plot_func <- function(methods, res_mat, key_mat, df_param, x_var = "rho",
                       y_seq = seq(0, 1,length.out = 11),
                       xlab = expression(paste("Sparisity (", rho, ")")),
                       main, 
+                      include_legend = T,
                       legend_cex = 1, legend_loc = 'bottomright'){
   idx_vec <- sapply(methods, function(x){which(key_mat$method == x)})
   idx_vec2 <- sapply(methods, function(x){which(rownames(res_mat) == x)}) 
@@ -38,8 +39,11 @@ plot_func <- function(methods, res_mat, key_mat, df_param, x_var = "rho",
                      pch = key_mat$pch[idx_vec[i]], cex = 1)
   }
   
-  legend(legend_loc, key_mat$full_name[idx_vec], 
-         lty = key_mat$lty[idx_vec], col = key_mat$color[idx_vec], lwd = 2, 
-         pch = key_mat$pch[idx_vec], cex = legend_cex, pt.cex = 0.8)
-  
+  if(include_legend){
+    legend(legend_loc, key_mat$full_name[idx_vec], 
+           lty = key_mat$lty[idx_vec], col = key_mat$color[idx_vec], lwd = 2, 
+           pch = key_mat$pch[idx_vec], cex = legend_cex, pt.cex = 0.8)
+  }
+ 
+  invisible()
 }

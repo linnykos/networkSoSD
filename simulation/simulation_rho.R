@@ -40,7 +40,7 @@ generator <- function(vec, worker_variables){
   
   adj_list <- lapply(1:L, function(i){networkSoSD::generate_adjaceny_mat(prob_list[[i]])})
   
-  list(adj_list = adj_list)
+  list(adj_list = adj_list, prob_list = prob_list)
 }
 
 executor <- function(dat, vec, y, worker_variables){

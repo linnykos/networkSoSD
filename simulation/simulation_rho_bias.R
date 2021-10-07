@@ -4,8 +4,9 @@ library(networkSoSD)
 session_info <- devtools::session_info()
 date_of_run <- Sys.time()
 
-paramMat <- cbind(500, 100, seq(0.025, 0.2, length.out = 15), 0.4, 0.1, 0.5)
-colnames(paramMat) <- c("n", "L", "rho", "mem_prop1", "mem_prop2", "mem_prop3")
+df_param <- cbind(3, 500, 100, seq(0.025, 0.2, length.out = 15), 0.4, 0.1, 0.5)
+colnames(df_param) <- c("K", "n", "L", "rho", "mem_prop1", "mem_prop2", "mem_prop3")
+df_param <- as.data.frame(df_param)
 
 .l2norm <- function(x){sqrt(sum(x^2))}
 vec1 <- c(1,1,sqrt(2))
@@ -38,10 +39,10 @@ rule <- function(vec){
 ############
 
 # first, measure the amount of bias caused by the diagonal entries
-bias_vec <- sapply(1:nrow(paramMat), function(i){
-  y <- 1; set.seed(y); dat <- rule(paramMat[i,])
+bias_vec <- sapply(1:nrow(df_param), function(i){
+  y <- 1; set.seed(y); dat <- rule(df_param[i,])
   
-  mat1 <- dat$prob_list[[1]]; mat2 <- dat$prob_list[[paramMat[i,"L"]/2+1]]
+  mat1 <- dat$prob_list[[1]]; mat2 <- dat$prob_list[[df_param[i,"L"]/2+1]]
   sq_mat <- crossprod(mat1) + crossprod(mat2)
   diag_vec <- colSums(mat1 + mat2)
   
@@ -59,7 +60,7 @@ bias_vec <- sapply(1:nrow(paramMat), function(i){
 })
 
 set.seed(10)
-row_setting <- 11; y <- 1; set.seed(y); dat <- rule(paramMat[row_setting,])
+row_setting <- 11; y <- 1; set.seed(y); dat <- rule(df_param[row_setting,])
 agg_mat1 <- networkSoSD::aggregate_networks(dat$adj_list, method = "ss")
 eigen_val1 <- eigen(agg_mat1)$values
 
@@ -81,16 +82,16 @@ for(i in 2:3){
   lines(rep(eigen_val2[i], 2), c(0, 500), col = grDevices::rgb(189/255, 57/255, 60/255), lwd = 2, lty = 2)
 }
 
-plot(NA, xlim = range(paramMat[,"rho"]), ylim = range(bias_vec), 
+plot(NA, xlim = range(df_param[,"rho"]), ylim = range(bias_vec), 
      xlab = expression(paste("Sparisity (", rho, ")")), ylab = "Population eigengap (ratio)",
      main = "Population eigengap induced by\ndiagonal bias")
-for(x in paramMat[seq(1, nrow(paramMat), by = 2), "rho"]){
+for(x in df_param[seq(1, nrow(df_param), by = 2), "rho"]){
   lines(rep(x,2), c(-1e4,1e4), col = "gray", lwd = 0.5, lty = 2)
 }
 for(y in seq(0,0.1,length.out = 6)){
   lines(c(-1e4,1e4), rep(y,2), col = "gray", lwd = 0.5, lty = 2)
 }
-points(paramMat[,"rho"], bias_vec, pch = 16)
+points(df_param[,"rho"], bias_vec, pch = 16)
 
 graphics.off()
 
