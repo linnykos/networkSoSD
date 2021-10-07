@@ -51,7 +51,7 @@ for(i in c(1:4,6:9)){
       units = "px", 
       res = 300)
   par(mar = c(4,4,5,0.5))
-  plot_table(clust1, clust2, 
+  networkSoSD:::plot_table(clust1, clust2, 
              main = paste0("CorThres=", df_param[i,"cor_threshold"], " and K=", df_param[i,"num_clusters"], "\nvs. Baseline"),
              normalize_row = F,
              col_names = paste0("B", sort(unique(clust2))))
