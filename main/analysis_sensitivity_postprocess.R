@@ -82,16 +82,27 @@ png(paste0("../figures/pnas_sensitivity", i, "_cleaned.png"),
     width = 1500, 
     units = "px", 
     res = 300)
-par(mar = c(5,5,6,0.5))
+par(mar = c(5,5,6,2.5))
 plot_table(clust1, clust2, 
-           main = paste0("Comparing results using correlation\nthreshold = ", df_param[i,"cor_threshold"], 
+           main = paste0("Comparing results using correlation\nthreshold = 0.77", 
                          " and K = ", df_param[i,"num_clusters"], "\ncompared to baseline"),
            normalize_row = F,
-           row_names = paste0("New cluster ",sort(unique(clust1))),
-           col_names = paste0("Baseline cluster ", sort(unique(clust2))),
-           col_xshift = 1/8+0.01,
-           col_offset = -1/16+0.01)
+           row_names = paste0("New community ",sort(unique(clust1))),
+           col_names = paste0("Baseline community ", sort(unique(clust2))),
+           col_xshift = .17,
+           col_offset = -.15,
+           cex_label = 0.8)
 graphics.off()
+
+n <- nrow(res_list[[3]]$adj_list[[1]])
+new_total <- sapply(res_list[[3]]$adj_list, function(x){
+  length(x@x)
+})
+original_total <- sapply(res_list[[5]]$adj_list, function(x){
+  length(x@x)
+})
+median(new_total/original_total)
+original_total/(n*(n-1)/2)
 
 i <- 7
 name_intersect <- intersect(res_list[[i]]$gene_name2, res_list[[5]]$gene_name2)
@@ -109,15 +120,24 @@ png(paste0("../figures/pnas_sensitivity", i, "_cleaned.png"),
     width = 1500, 
     units = "px", 
     res = 300)
-par(mar = c(4.3,3,4,0.5))
+par(mar = c(5,3,4,.5))
 plot_table(clust1, clust2, 
-           main = paste0("Comparing results using correlation\nthreshold = ", df_param[i,"cor_threshold"], 
+           main = paste0("Comparing results using correlation\nthreshold = 0.68", 
                          " and K = ", df_param[i,"num_clusters"], "\ncompared to baseline"),
            normalize_row = F,
-           row_names = paste0("New cluster ",sort(unique(clust1))),
-           col_names = paste0("Baseline cluster ", sort(unique(clust2))),
-           col_xshift = 1/8+0.03,
-           col_offset = 1/8,
+           row_names = paste0("New community ",sort(unique(clust1))),
+           col_names = paste0("Baseline community ", sort(unique(clust2))),
+           col_xshift = 0.18,
+           col_offset = 0.15,
            row_offset = 0,
-           cex_text = 0.9)
+           cex_text = 0.9,
+           cex_label = 0.8)
 graphics.off()
+
+new_total <- sapply(res_list[[7]]$adj_list, function(x){
+  length(x@x)
+})
+original_total <- sapply(res_list[[5]]$adj_list, function(x){
+  length(x@x)
+})
+median(new_total/original_total)

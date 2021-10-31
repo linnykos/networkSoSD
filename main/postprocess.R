@@ -16,12 +16,40 @@ color_func <- function(alpha = 0.2){
 color_name_vec <- c("yellow", "skyblue", "green", "blue", "orange", "gray", "red", "pale", "lightpurple")
 color_vec <- color_func(1)
 
-## first do some housekeeping
+## first do some rearranging
 # manually change the labeling of the clusters
-desired_order <- c(5,8,1,7,4,3,6,2)
+
+# first compute all the average matrices according to the clustering_res,
+# so we know which genes fall into which clustering in the correct ordering
+names(adj_list) <- c("0M", "12M", "3M", "48M", "E120", "E40", "E50", "E70", "E80", "E90")
+
+cor_list <- lapply(adj_list, function(adj_mat){
+  K <- max(clustering_res)
+  cor_mat <- matrix(0, K, K)
+  for(i in 1:K){
+    idx1 <- which(clustering_res == i)
+    for(j in i:K){
+      idx2 <- which(clustering_res == j)
+      tmp <- adj_mat[idx1,idx2]
+      cor_mat[i,j] <- mean(adj_mat[idx1,idx2])
+      cor_mat[j,i] <- cor_mat[i,j]
+    }
+  }
+  cor_mat
+})
+names(cor_list) <- names(adj_list)
+
+for(i in 1:length(cor_list)){
+  print(names(cor_list)[i])
+  print(round(diag(cor_list[[i]]),2))
+  print("===")
+}  
+print(table(clustering_res))
+
+order_vec <- c(3, 7, 1, 2, 6, 8, 4, 5)
 clustering_res2 <- rep(NA, length(clustering_res))
-for(i in 1:length(desired_order)){
-  clustering_res2[which(clustering_res == desired_order[i])] <- i
+for(i in 1:length(order_vec)){
+  clustering_res2[which(clustering_res == i)] <- order_vec[i]
 }
 table(clustering_res2)
 table(clustering_res2)/nrow(adj_list[[1]])
@@ -62,39 +90,39 @@ graphics.off()
 
 #########
 
-set.seed(10)
-umap_embedding <- Seurat::RunUMAP(networkSoSD:::.mult_mat_vec(svd_res$u, svd_res$d), verbose = F)@cell.embeddings
-col_umap <- color_vec[c(9,2:8)][clustering_res2]
-
-png(paste0("../figures/Writeup4_umap.png"), height = 1500, width = 1500, units = "px", res = 300)
-plot(NA, xlim = range(umap_embedding[,1]), ylim = range(umap_embedding[,2]),
-     xlab = "UMAP dimension 1", ylab = "UMAP dimension 2",
-     main = "UMAP of spectral embedding", asp = T)
-idx <- which(clustering_res2 == 8)
-points(umap_embedding[idx,1], umap_embedding[idx,2], pch = 16, col = col_umap[idx])
-points(umap_embedding[-idx,1], umap_embedding[-idx,2], pch = 16, col = col_umap[-idx])
-graphics.off()
+# set.seed(10)
+# umap_embedding <- Seurat::RunUMAP(networkSoSD:::.mult_mat_vec(svd_res$u, svd_res$d), verbose = F)@cell.embeddings
+# col_umap <- color_vec[c(9,2:8)][clustering_res2]
+# 
+# png(paste0("../figures/Writeup4_umap.png"), height = 1500, width = 1500, units = "px", res = 300)
+# plot(NA, xlim = range(umap_embedding[,1]), ylim = range(umap_embedding[,2]),
+#      xlab = "UMAP dimension 1", ylab = "UMAP dimension 2",
+#      main = "UMAP of spectral embedding", asp = T)
+# idx <- which(clustering_res2 == 8)
+# points(umap_embedding[idx,1], umap_embedding[idx,2], pch = 16, col = col_umap[idx])
+# points(umap_embedding[-idx,1], umap_embedding[-idx,2], pch = 16, col = col_umap[-idx])
+# graphics.off()
 
 ###################
 
-low_dim_mat <- do.call(cbind, lapply(1:length(adj_list), function(i){
-  print(i)
-  tmp <- networkSoSD:::.svd_truncated(adj_list[[i]], K = K, symmetric = T)
-  networkSoSD:::.mult_mat_vec(tmp$u, tmp$d)
-}))
-
-set.seed(10)
-umap_embedding2 <- Seurat::RunUMAP(low_dim_mat, verbose = F)@cell.embeddings
-col_umap <- color_vec[c(9,2:8)][clustering_res2]
-
-png(paste0("../figures/Writeup4_umap2.png"), height = 1500, width = 1500, units = "px", res = 300)
-plot(NA, xlim = range(umap_embedding2[,1]), ylim = range(umap_embedding2[,2]),
-     xlab = "UMAP dimension 1", ylab = "UMAP dimension 2",
-     main = "UMAP of spectral embedding", asp = T)
-idx <- which(clustering_res2 == 8)
-points(umap_embedding2[idx,1], umap_embedding2[idx,2], pch = 16, col = col_umap[idx])
-points(umap_embedding2[-idx,1], umap_embedding2[-idx,2], pch = 16, col = col_umap[-idx])
-graphics.off()
+# low_dim_mat <- do.call(cbind, lapply(1:length(adj_list), function(i){
+#   print(i)
+#   tmp <- networkSoSD:::.svd_truncated(adj_list[[i]], K = K, symmetric = T)
+#   networkSoSD:::.mult_mat_vec(tmp$u, tmp$d)
+# }))
+# 
+# set.seed(10)
+# umap_embedding2 <- Seurat::RunUMAP(low_dim_mat, verbose = F)@cell.embeddings
+# col_umap <- color_vec[c(9,2:8)][clustering_res2]
+# 
+# png(paste0("../figures/Writeup4_umap2.png"), height = 1500, width = 1500, units = "px", res = 300)
+# plot(NA, xlim = range(umap_embedding2[,1]), ylim = range(umap_embedding2[,2]),
+#      xlab = "UMAP dimension 1", ylab = "UMAP dimension 2",
+#      main = "UMAP of spectral embedding", asp = T)
+# idx <- which(clustering_res2 == 8)
+# points(umap_embedding2[idx,1], umap_embedding2[idx,2], pch = 16, col = col_umap[idx])
+# points(umap_embedding2[-idx,1], umap_embedding2[-idx,2], pch = 16, col = col_umap[-idx])
+# graphics.off()
 
 ####################
 
@@ -163,39 +191,171 @@ ego_summary
 
 ###################
 
-convert_synonyms <- function(vec){
-  stopifnot(is.character(vec))
-  len <- length(vec)
-  
-  dbCon <- org.Hs.eg.db::org.Hs.eg_dbconn()
-  sqlQuery <- 'SELECT * FROM alias, gene_info WHERE alias._id == gene_info._id;'
-  aliasSymbol <- DBI::dbGetQuery(dbCon, sqlQuery)
-  
-  syn_vec <- sapply(1:len, function(i){
-    bool <- any(c(vec[i] %in% aliasSymbol$alias_symbol, vec[i] %in% aliasSymbol$symbol))
-    if(!bool | vec[i] %in% aliasSymbol$symbol) return(vec[i])
-    
-    idx <- which(aliasSymbol$alias_symbol %in% vec[i])[1]
-    aliasSymbol$symbol[idx]
-  })
-  
-  names(syn_vec) <- NULL
-  syn_vec
-}
+# convert_synonyms <- function(vec){
+#   stopifnot(is.character(vec))
+#   len <- length(vec)
+#   
+#   dbCon <- org.Hs.eg.db::org.Hs.eg_dbconn()
+#   sqlQuery <- 'SELECT * FROM alias, gene_info WHERE alias._id == gene_info._id;'
+#   aliasSymbol <- DBI::dbGetQuery(dbCon, sqlQuery)
+#   
+#   syn_vec <- sapply(1:len, function(i){
+#     bool <- any(c(vec[i] %in% aliasSymbol$alias_symbol, vec[i] %in% aliasSymbol$symbol))
+#     if(!bool | vec[i] %in% aliasSymbol$symbol) return(vec[i])
+#     
+#     idx <- which(aliasSymbol$alias_symbol %in% vec[i])[1]
+#     aliasSymbol$symbol[idx]
+#   })
+#   
+#   names(syn_vec) <- NULL
+#   syn_vec
+# }
+# 
+# housekeeping <- read.csv("../../../data/bakken_pnas/housekeeping_genes.csv",
+#                          header = F)
+# housekeeping <- housekeeping[,1]
+# housekeeping <- convert_synonyms(housekeeping)
+# length(housekeeping)
+# gene_name2b <- convert_synonyms(gene_name2)
+# housekeeping <- housekeeping[housekeeping %in% gene_name2b]
+# length(housekeeping)
+# for(i in 1:max(clustering_res2)){
+#   idx <- which(clustering_res2 == i)
+#   gene_vec <- gene_name2b[idx]
+#   
+#   print(i)
+#   print(paste0("Size: ", length(idx)))
+#   print(paste0("Housekeeping: ", length(intersect(gene_vec, housekeeping))))
+#   
+#   count_mat <- matrix(0, 2, 2)
+#   count_mat[1,1] <- sum(gene_name2b %in% intersect(gene_vec, housekeeping))
+#   count_mat[1,2] <- sum(gene_name2b %in% setdiff(gene_vec, housekeeping))
+#   count_mat[2,1] <- sum(gene_name2b %in% setdiff(housekeeping, gene_vec))
+#   count_mat[2,2] <- sum(!gene_name2b %in% c(housekeeping, gene_vec))
+#   
+#   # see http://mengnote.blogspot.com/2012/12/calculate-correct-hypergeometric-p.html
+#   fisher_res <- stats::fisher.test(count_mat, alternative='greater')
+#   print(count_mat)
+#   print(fisher_res$p.value)
+#   print("=====")
+# }
 
-housekeeping <- read.csv("../../../data/bakken_pnas/housekeeping_genes.csv",
-                         header = F)
-housekeeping <- housekeeping[,1]
-housekeeping <- convert_synonyms(housekeeping)
-length(housekeeping)
-gene_name2b <- convert_synonyms(gene_name2)
-housekeeping <- housekeeping[housekeeping %in% gene_name2b]
-length(housekeeping)
-for(i in 1:max(clustering_res)){
-  idx <- which(clustering_res == i)
-  gene_vec <- gene_name2b[idx]
-  
-  print(i)
-  print(paste0("Size: ", length(idx)))
-  print(paste0("Housekeeping: ", length(intersect(gene_vec, housekeeping))))
+##################
+
+cor_list <- lapply(adj_list, function(adj_mat){
+  K <- max(clustering_res)
+  cor_mat <- matrix(0, K, K)
+  for(i in 1:K){
+    idx1 <- which(clustering_res2 == i)
+    for(j in i:K){
+      idx2 <- which(clustering_res2 == j)
+      tmp <- adj_mat[idx1,idx2]
+      cor_mat[i,j] <- sum(adj_mat[idx1,idx2])/2
+      cor_mat[j,i] <- cor_mat[i,j]
+    }
+  }
+  cor_mat
+})
+names(cor_list) <- names(adj_list)
+
+within_cluster_mat <- sapply(cor_list, function(cor_mat){
+  num <- table(clustering_res2)
+  diag(cor_mat)/(num * (num-1)/2)
+})
+colnames(within_cluster_mat) <- names(cor_list)
+between_cluster_mat <- sapply(cor_list, function(cor_mat){
+  offdiag_vec <- (colSums(cor_mat) - as.numeric(diag(cor_mat)))
+  num <- table(clustering_res2)
+  total_entries <- sapply(1:length(num), function(i){
+    num[i]*sum(num[-i])
+  })
+  offdiag_vec/total_entries
+})
+colnames(between_cluster_mat) <- names(cor_list)
+
+col_palette <- color_vec[c(7, 5, 8, 1, 3, 2, 4, 6)]
+lty_vec <- c(1,5,3,1,5,3,1,5)
+time_order <- c(6:10, 5, 1:4)
+png(paste0("../figures/pnas_connectivity.png"), 
+    height = 1500, width = 2500, units = "px", res = 300)
+ylim <- c(0, max(within_cluster_mat))
+plot(NA, xlim = c(1,ncol(within_cluster_mat)), 
+     ylim = ylim,
+     main = "Within-cluster connectivity over time",
+     xlab = "Time",
+     ylab = "Edge density",
+     xaxt = "n")
+for(i in 1:nrow(within_cluster_mat)){
+  lines(x = 1:ncol(within_cluster_mat),
+        y = within_cluster_mat[i,time_order],
+        col = "white",
+        lwd = 7)
+  # lines(x = 1:ncol(within_cluster_mat),
+  #       y = within_cluster_mat[i,time_order],
+  #       col = "black",
+  #       lwd = 2.1, lty = lty_vec[i])
+  lines(x = 1:ncol(within_cluster_mat),
+        y = within_cluster_mat[i,time_order],
+        col = col_palette[i],
+        lwd = 5, lty = lty_vec[i])
 }
+axis(1, at = 1:ncol(within_cluster_mat), 
+     labels = colnames(within_cluster_mat)[time_order])
+legend("bottomright", paste0("Cluster ", 1:8), 
+       col=col_palette, 
+       lty=c(1,2,3,1,2,3,1,2), lwd = 5)
+graphics.off()
+
+##########################
+
+# load("../../../data/brainspan/brain_expression.rda")
+# brain_expression <- brain_expression[which(brain_expression[,"Brain_expressed"] %in% c("Yes")),]
+# 
+# convert_synonyms <- function(vec){
+#   stopifnot(is.character(vec))
+#   len <- length(vec)
+# 
+#   dbCon <- org.Hs.eg.db::org.Hs.eg_dbconn()
+#   sqlQuery <- 'SELECT * FROM alias, gene_info WHERE alias._id == gene_info._id;'
+#   aliasSymbol <- DBI::dbGetQuery(dbCon, sqlQuery)
+# 
+#   syn_vec <- sapply(1:len, function(i){
+#     bool <- any(c(vec[i] %in% aliasSymbol$alias_symbol, vec[i] %in% aliasSymbol$symbol))
+#     if(!bool | vec[i] %in% aliasSymbol$symbol) return(vec[i])
+# 
+#     idx <- which(aliasSymbol$alias_symbol %in% vec[i])[1]
+#     aliasSymbol$symbol[idx]
+#   })
+# 
+#   names(syn_vec) <- NULL
+#   syn_vec
+# }
+# 
+# brain_genes <- brain_expression[,1]
+# brain_genes <- convert_synonyms(brain_genes)
+# gene_name2b <- convert_synonyms(gene_name2)
+# 
+# length(gene_name2)
+# length(gene_name2b)
+# length(intersect(brain_genes, gene_name2b))
+# 
+# for(i in 1:max(clustering_res2)){
+#   idx <- which(clustering_res2 == i)
+#   gene_vec <- gene_name2b[idx]
+# 
+#   print(i)
+#   print(paste0("Size: ", length(idx)))
+#   print(paste0("Brain expressed: ", length(intersect(gene_vec, brain_genes))))
+# 
+#   count_mat <- matrix(0, 2, 2)
+#   count_mat[1,1] <- sum(gene_name2b %in% intersect(gene_vec, brain_genes))
+#   count_mat[1,2] <- sum(gene_name2b %in% setdiff(gene_vec, brain_genes))
+#   count_mat[2,1] <- sum(gene_name2b %in% setdiff(brain_genes, gene_vec))
+#   count_mat[2,2] <- sum(!gene_name2b %in% c(brain_genes, gene_vec))
+# 
+#   # see http://mengnote.blogspot.com/2012/12/calculate-correct-hypergeometric-p.html
+#   fisher_res <- stats::fisher.test(count_mat, alternative='greater')
+#   print(count_mat)
+#   print(fisher_res$p.value)
+#   print("=====")
+# }

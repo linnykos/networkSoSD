@@ -10,6 +10,7 @@ plot_table <- function(cluster_vec1, cluster_vec2,
                        base_color = grDevices::rgb(0.803, 0.156, 0.211),
                        sig_digs = 2,
                        cex_text = 1,
+                       cex_label = 0.9,
                        ...){
   stopifnot(length(cluster_vec1) == length(cluster_vec2))
   
@@ -42,13 +43,13 @@ plot_table <- function(cluster_vec1, cluster_vec2,
                  adj = 1, 
                  labels = rev(row_names), 
                  xpd = TRUE,
-                 cex = 0.9)
+                 cex = cex_label)
   graphics::text(seq(0, 1, length.out = p2) + col_xshift, 
                  par("usr")[1] + col_offset, 
                  labels = col_names, 
                  srt = -45,
                  xpd = TRUE,
-                 cex = 0.9)
+                 cex = cex_label)
   
   x_vec <- seq(0, 1, length.out = p2)
   y_vec <- seq(0, 1, length.out = p1)

@@ -15,7 +15,7 @@ color_vec <- color_func(1)
 
 plot_func <- function(methods, res_mat, key_mat, df_param, x_var = "rho",
                       y_seq = seq(0, 1,length.out = 11),
-                      xlab = expression(paste("Sparisity (", rho, ")")),
+                      xlab = expression(paste("Overall edge density (", rho, ")")),
                       main, 
                       include_legend = T,
                       legend_cex = 1, legend_loc = 'bottomright'){
