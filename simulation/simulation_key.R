@@ -15,6 +15,7 @@ color_vec <- color_func(1)
 
 plot_func <- function(methods, res_mat, key_mat, df_param, x_var = "rho",
                       y_seq = seq(0, 1,length.out = 11),
+                      ylab = "% mis-clustered nodes\n(Averaged over 100 trials)",
                       xlab = expression(paste("Overall edge density (", rho, ")")),
                       main, 
                       include_legend = T,
@@ -24,7 +25,7 @@ plot_func <- function(methods, res_mat, key_mat, df_param, x_var = "rho",
   stopifnot(length(idx_vec) == length(idx_vec2))
   
   plot(NA, xlim = range(as.numeric(df_param[,x_var])), ylim = range(res_mat), xlab = xlab,
-       ylab = "% mis-clustered nodes\n(Averaged over 50 trials)", main = main)
+       ylab = ylab, main = main)
   # draw grid
   for(x in as.numeric(df_param[seq(1, nrow(df_param), by = 2), x_var])){
     lines(rep(x,2), c(-1e4,1e4), col = "gray", lwd = 0.5, lty = 2)
