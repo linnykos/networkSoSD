@@ -1,4 +1,7 @@
-# All functions from https://u.osu.edu/subhadeep/codes/
+# The below functions are written by the authors of 
+# the paper: Spectral and matrix factorization methods for consistent community detection in multi-layer networks
+# Paul, S., Chen, Y. (2020), Annals.
+# See the source at https://u.osu.edu/subhadeep/codes/
 
 laplacian <- function(x, weights = rep(1, length(x))) {
   M = length(x)

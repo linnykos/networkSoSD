@@ -4,8 +4,6 @@ library(networkSoSD)
 
 session_info <- devtools::session_info()
 date_of_run <- Sys.time()
-source_code_info <- readLines("../simulation/simulation_rho.R")
-run_suffix <- ""
 
 df_param <- cbind(3, 500, 100, 0.2, seq(0, 0.5, length.out = 11), 
                   0.4, 0.1, 0.5)
@@ -100,27 +98,22 @@ executor <- function(dat, vec, y, worker_variables){
   flat_mat <- networkSoSD::flatten(dat$adj_list)
   res4b <- networkSoSD::spectral_clustering(flat_mat, K = K, weighted = T)
   
-  ### now the greedy method
-  set.seed(10)
-  res5 <- networkSoSD::greedy_refinement(dat$adj_list, K = K)$cluster
-  
   # yuguo's methods
   set.seed(10)
-  res6 <- networkSoSD::lmfo(dat$adj_list, k = K)
+  res5 <- networkSoSD::lmfo(dat$adj_list, k = K)
   
   # set.seed(10)
   reg_val <- max(sapply(dat$adj_list, function(x){4*max(abs(RSpectra::eigs_sym(x, k = min(K,5))$values))}))
   tmp <- networkSoSD::coreg(dat$adj_list, k = K, beta = reg_val,
                             verbose = F, max_iter = 50)
-  res7 <- tmp[[length(dat$adj_list)+1]]
+  res6 <- tmp[[length(dat$adj_list)+1]]
   
   list(res_ss_debias_F = res1, res_ss_debias_T = res1b,
        res_sum_F = res2, res_sum_T = res2b,
        res_ss_F = res3, res_ss_T = res3b,
        res_flat_F = res4, res_flat_T = res4b,
-       res_greedy = res5, 
-       chen_linked = res6, 
-       chen_coreg = res7)
+       chen_linked = res5, 
+       chen_coreg = res6)
 }
 
 ## i <- 1; y <- 1; set.seed(y); zz <- executor(generator(df_param[i,], worker_variables), df_param[i,], y, worker_variables); zz

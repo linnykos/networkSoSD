@@ -60,12 +60,12 @@ criterion <- function(dat, vec, y){
   
   # yuguo's methods
   set.seed(10)
-  res5 <- lmfo(dat$adj_list, n = nrow(dat$adj_list[[1]]), k = K)
+  res5 <- networkSoSD::lmfo(dat$adj_list, k = K)
   
   set.seed(10)
   reg_val <- max(sapply(dat$adj_list, function(x){4*max(abs(RSpectra::eigs_sym(x, k = min(K,5))$values))}))
-  tmp <- coreg(dat$adj_list, n = nrow(dat$adj_list[[1]]), k = K, beta = reg_val,
-               verbose = F, max_iter = 50)
+  tmp <- networkSoSD::coreg(dat$adj_list, k = K, beta = reg_val,
+                            verbose = F, max_iter = 50)
   res6 <- tmp[[length(dat$adj_list)+1]]
   
   list(res_ss_debias_F = res1, res_sum_F = res2, 
