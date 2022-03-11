@@ -5,8 +5,6 @@ library(networkSoSD); library(org.Mmu.eg.db); library(RSpectra); library(irlba)
 load("../../../data/bakken_pnas/pnas.RData")
 session_info <- devtools::session_info()
 date_of_run <- Sys.time()
-source_code_info <- readLines("../main/analysis.R")
-run_suffix <- "_revision"
 
 # manage gene names
 gene_name <- read.csv("../../../data/bakken_pnas/All_human_genes.txt", header = F)
@@ -83,8 +81,8 @@ clustering_res <- networkSoSD::spectral_clustering(total_network, K = K, weighte
 
 save_var <- c("adj_list", "entrez_id", "gene_name", "entrez_id2", "gene_name2", "power_law",
               "total_network", "svd_res", "clustering_res", "K", "session_info",
-              "date_of_run", "source_code_info", "run_suffix")
+              "date_of_run", "source_code_info")
 var_list <- ls()
 var_list <- var_list[!var_list %in% save_var]
 rm(list = var_list)
-save.image(paste0("../results/main_analysis", run_suffix, ".RData"))
+save.image(paste0("../results/main_analysis.RData"))

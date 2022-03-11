@@ -5,7 +5,6 @@ library(networkSoSD); library(org.Mmu.eg.db); library(RSpectra); library(irlba)
 load("../../../data/bakken_pnas/pnas.RData")
 session_info <- devtools::session_info()
 date_of_run <- Sys.time()
-source_code_info <- readLines("../main/analysis_sensitivity.R")
 
 # manage gene names
 gene_name <- read.csv("../../../data/bakken_pnas/All_human_genes.txt", header = F)
