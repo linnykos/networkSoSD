@@ -88,53 +88,10 @@ plot(vec, xlim = c(1,length(vec)), ylim = range(vec), pch = 16, xlab = "Index", 
 lines(rep(8.5,2), c(-1e2,1e9), col = color_vec[which(color_name_vec == "red")], lwd = 2, lty = 2)
 graphics.off()
 
-#########
-
-# set.seed(10)
-# umap_embedding <- Seurat::RunUMAP(networkSoSD:::.mult_mat_vec(svd_res$u, svd_res$d), verbose = F)@cell.embeddings
-# col_umap <- color_vec[c(9,2:8)][clustering_res2]
-# 
-# png(paste0("../figures/Writeup4_umap.png"), height = 1500, width = 1500, units = "px", res = 300)
-# plot(NA, xlim = range(umap_embedding[,1]), ylim = range(umap_embedding[,2]),
-#      xlab = "UMAP dimension 1", ylab = "UMAP dimension 2",
-#      main = "UMAP of spectral embedding", asp = T)
-# idx <- which(clustering_res2 == 8)
-# points(umap_embedding[idx,1], umap_embedding[idx,2], pch = 16, col = col_umap[idx])
-# points(umap_embedding[-idx,1], umap_embedding[-idx,2], pch = 16, col = col_umap[-idx])
-# graphics.off()
-
-###################
-
-# low_dim_mat <- do.call(cbind, lapply(1:length(adj_list), function(i){
-#   print(i)
-#   tmp <- networkSoSD:::.svd_truncated(adj_list[[i]], K = K, symmetric = T)
-#   networkSoSD:::.mult_mat_vec(tmp$u, tmp$d)
-# }))
-# 
-# set.seed(10)
-# umap_embedding2 <- Seurat::RunUMAP(low_dim_mat, verbose = F)@cell.embeddings
-# col_umap <- color_vec[c(9,2:8)][clustering_res2]
-# 
-# png(paste0("../figures/Writeup4_umap2.png"), height = 1500, width = 1500, units = "px", res = 300)
-# plot(NA, xlim = range(umap_embedding2[,1]), ylim = range(umap_embedding2[,2]),
-#      xlab = "UMAP dimension 1", ylab = "UMAP dimension 2",
-#      main = "UMAP of spectral embedding", asp = T)
-# idx <- which(clustering_res2 == 8)
-# points(umap_embedding2[idx,1], umap_embedding2[idx,2], pch = 16, col = col_umap[idx])
-# points(umap_embedding2[-idx,1], umap_embedding2[-idx,2], pch = 16, col = col_umap[-idx])
-# graphics.off()
-
 ####################
 
 time_stamp <- c("0M", "12M", "3M", "48M", "E120", "E40", "E50", "E70", "E80", "E90")
-time_order <- c(7,9,8,10,6,1,2,3,4,5)
-# alternatively, run the following lines:
-# file_vec <- list.files("/raid6/Fuchen/monkey_data/PretimeA/")
-# file_vec <- file_vec[grep("All.*new.*", file_vec)]
-# time_stamp <- as.vector(sapply(file_vec, function(x){
-#   tmp <- rev(strsplit(x, split = "_")[[1]])[1]
-#   strsplit(tmp, split = "\\.")[[1]][1]
-# }))
+time_order <- c(7,9,8,10,6,1,2,3,4,5) # HARD CODED
 
 idx_odd <- seq(1, length(clustering_res2), by = 10)
 clustering_res2b <- clustering_res2[idx_odd]
@@ -189,56 +146,6 @@ ego_summary
 # # http://supfam.org/SUPERFAMILY/cgi-bin/go.cgi
 # # https://www.biostars.org/p/237816/
 
-###################
-
-# convert_synonyms <- function(vec){
-#   stopifnot(is.character(vec))
-#   len <- length(vec)
-#   
-#   dbCon <- org.Hs.eg.db::org.Hs.eg_dbconn()
-#   sqlQuery <- 'SELECT * FROM alias, gene_info WHERE alias._id == gene_info._id;'
-#   aliasSymbol <- DBI::dbGetQuery(dbCon, sqlQuery)
-#   
-#   syn_vec <- sapply(1:len, function(i){
-#     bool <- any(c(vec[i] %in% aliasSymbol$alias_symbol, vec[i] %in% aliasSymbol$symbol))
-#     if(!bool | vec[i] %in% aliasSymbol$symbol) return(vec[i])
-#     
-#     idx <- which(aliasSymbol$alias_symbol %in% vec[i])[1]
-#     aliasSymbol$symbol[idx]
-#   })
-#   
-#   names(syn_vec) <- NULL
-#   syn_vec
-# }
-# 
-# housekeeping <- read.csv("../../../data/bakken_pnas/housekeeping_genes.csv",
-#                          header = F)
-# housekeeping <- housekeeping[,1]
-# housekeeping <- convert_synonyms(housekeeping)
-# length(housekeeping)
-# gene_name2b <- convert_synonyms(gene_name2)
-# housekeeping <- housekeeping[housekeeping %in% gene_name2b]
-# length(housekeeping)
-# for(i in 1:max(clustering_res2)){
-#   idx <- which(clustering_res2 == i)
-#   gene_vec <- gene_name2b[idx]
-#   
-#   print(i)
-#   print(paste0("Size: ", length(idx)))
-#   print(paste0("Housekeeping: ", length(intersect(gene_vec, housekeeping))))
-#   
-#   count_mat <- matrix(0, 2, 2)
-#   count_mat[1,1] <- sum(gene_name2b %in% intersect(gene_vec, housekeeping))
-#   count_mat[1,2] <- sum(gene_name2b %in% setdiff(gene_vec, housekeeping))
-#   count_mat[2,1] <- sum(gene_name2b %in% setdiff(housekeeping, gene_vec))
-#   count_mat[2,2] <- sum(!gene_name2b %in% c(housekeeping, gene_vec))
-#   
-#   # see http://mengnote.blogspot.com/2012/12/calculate-correct-hypergeometric-p.html
-#   fisher_res <- stats::fisher.test(count_mat, alternative='greater')
-#   print(count_mat)
-#   print(fisher_res$p.value)
-#   print("=====")
-# }
 
 ##################
 
@@ -305,57 +212,3 @@ legend("bottomright", paste0("Cluster ", 1:8),
        col=col_palette, 
        lty=c(1,2,3,1,2,3,1,2), lwd = 5)
 graphics.off()
-
-##########################
-
-# load("../../../data/brainspan/brain_expression.rda")
-# brain_expression <- brain_expression[which(brain_expression[,"Brain_expressed"] %in% c("Yes")),]
-# 
-# convert_synonyms <- function(vec){
-#   stopifnot(is.character(vec))
-#   len <- length(vec)
-# 
-#   dbCon <- org.Hs.eg.db::org.Hs.eg_dbconn()
-#   sqlQuery <- 'SELECT * FROM alias, gene_info WHERE alias._id == gene_info._id;'
-#   aliasSymbol <- DBI::dbGetQuery(dbCon, sqlQuery)
-# 
-#   syn_vec <- sapply(1:len, function(i){
-#     bool <- any(c(vec[i] %in% aliasSymbol$alias_symbol, vec[i] %in% aliasSymbol$symbol))
-#     if(!bool | vec[i] %in% aliasSymbol$symbol) return(vec[i])
-# 
-#     idx <- which(aliasSymbol$alias_symbol %in% vec[i])[1]
-#     aliasSymbol$symbol[idx]
-#   })
-# 
-#   names(syn_vec) <- NULL
-#   syn_vec
-# }
-# 
-# brain_genes <- brain_expression[,1]
-# brain_genes <- convert_synonyms(brain_genes)
-# gene_name2b <- convert_synonyms(gene_name2)
-# 
-# length(gene_name2)
-# length(gene_name2b)
-# length(intersect(brain_genes, gene_name2b))
-# 
-# for(i in 1:max(clustering_res2)){
-#   idx <- which(clustering_res2 == i)
-#   gene_vec <- gene_name2b[idx]
-# 
-#   print(i)
-#   print(paste0("Size: ", length(idx)))
-#   print(paste0("Brain expressed: ", length(intersect(gene_vec, brain_genes))))
-# 
-#   count_mat <- matrix(0, 2, 2)
-#   count_mat[1,1] <- sum(gene_name2b %in% intersect(gene_vec, brain_genes))
-#   count_mat[1,2] <- sum(gene_name2b %in% setdiff(gene_vec, brain_genes))
-#   count_mat[2,1] <- sum(gene_name2b %in% setdiff(brain_genes, gene_vec))
-#   count_mat[2,2] <- sum(!gene_name2b %in% c(brain_genes, gene_vec))
-# 
-#   # see http://mengnote.blogspot.com/2012/12/calculate-correct-hypergeometric-p.html
-#   fisher_res <- stats::fisher.test(count_mat, alternative='greater')
-#   print(count_mat)
-#   print(fisher_res$p.value)
-#   print("=====")
-# }
