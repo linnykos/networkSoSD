@@ -21,8 +21,8 @@ K <- 3
 rm(list = c("vec1", "vec2", "vec3", "eigen_mat"))
 
 rule <- function(vec){
-  n <- vec["n"]; L <- vec["L"]; rho <- vec["rho"]
-  mem_prop1 <- vec["mem_prop1"]; mem_prop2 <- vec["mem_prop2"]; mem_prop3 <- vec["mem_prop3"]
+  n <- as.numeric(vec["n"]); L <- as.numeric(vec["L"]); rho <- as.numeric(vec["rho"])
+  mem_prop1 <- as.numeric(vec["mem_prop1"]); mem_prop2 <- as.numeric(vec["mem_prop2"]); mem_prop3 <- as.numeric(vec["mem_prop3"])
   
   membership_vec <- c(rep(1, mem_prop1*n), rep(2, mem_prop2*n), rep(3, mem_prop3*n))
   if(length(membership_vec) < n) membership_vec <- c(membership_vec, rep(3, n-length(membership_vec)))
@@ -83,7 +83,7 @@ for(i in 2:3){
 }
 
 plot(NA, xlim = range(df_param[,"rho"]), ylim = range(bias_vec), 
-     xlab = expression(paste("Sparisity (", rho, ")")), ylab = "Population eigengap (ratio)",
+     xlab = expression(paste("Overall edge density (", rho, ")")), ylab = "Population eigengap (ratio)",
      main = "Population eigengap induced by\ndiagonal bias")
 for(x in df_param[seq(1, nrow(df_param), by = 2), "rho"]){
   lines(rep(x,2), c(-1e4,1e4), col = "gray", lwd = 0.5, lty = 2)

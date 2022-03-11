@@ -73,7 +73,7 @@ par(mar = c(5,5,5,0.5))
 methods <- c( "res_sum_T", "res_ss_T", "res_ss_debias_T", "res_flat_T")
 plot_func(methods, res_mat, key_mat, df_param, 
           main = "Comparison against aggregation\nmethods (Weighted, Three communites)",
-          y_seq = seq(0, 0.4, length.out = 9), 
+          y_seq = seq(0, 0.5, length.out = 11), 
           legend_cex = 0.55, 
           legend_loc = "topright")
 graphics.off()
